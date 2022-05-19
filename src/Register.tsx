@@ -1,4 +1,4 @@
-import Navbar from "./navbar";
+import Navbar from "./Navbar";
 import {Button, Container, Grid, Input, InputLabel, OutlinedInput, Stack, TextField} from "@mui/material";
 import {ReactNode} from "react";
 

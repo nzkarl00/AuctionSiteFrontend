@@ -2,8 +2,9 @@ import React from 'react';
 import logo from './logo.svg';
 import './App.css';
 import {BrowserRouter as Router, Routes, Route} from "react-router-dom";
-import Navbar from "./navbar";
-import Register from "./register"
+import Navbar from "./Navbar";
+import Register from "./Register"
+import Auctions from "./Auctions";
 
 function App() {
   return (
@@ -11,7 +12,7 @@ function App() {
         <Router>
           <div>
             <Routes>
-              {/*<Route path="/auctions" element={<Auctions/>}/>*/}
+              <Route path="/auctions" element={<Auctions/>}/>
               <Route path="/register" element={<Register/>}/>
               <Route path="/navbar" element={<Navbar/>}/>
               {/*<Route path="/auctions/:id" element={<Auction/>}/>*/}

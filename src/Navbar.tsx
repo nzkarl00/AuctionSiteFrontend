@@ -1,15 +1,12 @@
 import {
-    Accordion,
     AppBar,
     Box,
-    Drawer,
     IconButton,
-    InputBase, Link, Menu, MenuItem,
-    SpeedDial,
-    TextField,
+    Menu, MenuItem,
     Toolbar,
     Typography
 } from "@mui/material";
+import {Link, useNavigate} from 'react-router-dom';
 import MenuIcon from '@mui/icons-material/Menu'
 import {AccountCircle, Search, VerifiedUser} from "@mui/icons-material";
 import SearchIcon from '@mui/icons-material/Search';
@@ -33,9 +30,9 @@ const Navbar = () => {
             <Box sx={{ flexGrow: 1 }} />
             <IconButton id="accountButton" edge={"end"} onClick={openAccountMenu}><AccountCircle sx={{color:"white"}}/></IconButton>
             <Menu anchorEl={anchorElement} MenuListProps={{"aria-labelledby": "accountButton"}} open={open} onClose={closeAccountMenu}>
-                <MenuItem><Link href={"/register"}>My Profile</Link></MenuItem>
-                <MenuItem><Link href={"/register"}>My Auctions</Link></MenuItem>
-                <MenuItem><Link href={"/register"}>Sign Out</Link></MenuItem>
+                <MenuItem><Link to={"/register"}>My Profile</Link></MenuItem>
+                <MenuItem><Link to={"/register"}>My Auctions</Link></MenuItem>
+                <MenuItem><Link to={"/register"}>Sign Out</Link></MenuItem>
             </Menu>
         </Toolbar>
     </AppBar>
