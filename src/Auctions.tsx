@@ -16,6 +16,7 @@ const Auctions = () => {
     const [errorMessage, setErrorMessage] = React.useState("")
     const [categories, setCategories] = React.useState<Array<category>>([])
     const [selectedCategories, setSelectedCategories] = React.useState<Array<string>>([])
+    const [search, setSearch] = React.useState('')
     const millisInDay = 86400000;
     React.useEffect(() => {
         getAuctions()
@@ -31,6 +32,13 @@ const Auctions = () => {
             }, (error) => {
                 setErrorFlag(true)
                 setErrorMessage(error.toString())
+            })
+    }
+    const updateSearch = (event: { target?: any; }) => {
+        setSearch(event.target.value)
+        axios.get('http://localhost:4941/api/v1/auctions', {params: {q: event.target.value, status: "OPEN"}})
+            .then((response) => {
+                setAuctions(response.data.auctions)
             })
     }
     const getAuctions = () => {
@@ -135,7 +143,7 @@ const Auctions = () => {
         <Paper elevation={2} sx={{padding: 0.1}}>
             <FormControl>
                 <h3>Filter:</h3>
-                <TextField id="searchParams" label="Search"/>
+                <TextField id="searchParams" label="Search" onChange={updateSearch}/>
                 <br></br>
                 <Select id={"categorySelect"} onChange={handleCatSelection} multiple value = {selectedCategories} placeholder={"Categories"}
                     MenuProps={{sx:{maxHeight: 300}}}
