@@ -12,7 +12,7 @@ import {AccountCircle, Search, VerifiedUser} from "@mui/icons-material";
 import SearchIcon from '@mui/icons-material/Search';
 import React from "react";
 
-const Navbar = () => {
+const Navbar = (props: { pageName: string | number | boolean | React.ReactElement<any, string | React.JSXElementConstructor<any>> | React.ReactFragment | React.ReactPortal | null | undefined; }) => {
     const [anchorElement, setAnchorElement] = React.useState<null | HTMLElement>(null);
     const open = Boolean(anchorElement);
     const openAccountMenu = (event: React.MouseEvent<HTMLButtonElement>) => {
@@ -26,7 +26,7 @@ const Navbar = () => {
     <AppBar>
         <Toolbar>
             <MenuIcon sx={{mr:2}} />
-            <Typography variant={"h5"} sx={{mr:2}}>Page Name</Typography>
+            <Typography variant={"h5"} sx={{mr:2}}>{props.pageName}</Typography>
             <Box sx={{ flexGrow: 1 }} />
             <IconButton id="accountButton" edge={"end"} onClick={openAccountMenu}><AccountCircle sx={{color:"white"}}/></IconButton>
             <Menu anchorEl={anchorElement} MenuListProps={{"aria-labelledby": "accountButton"}} open={open} onClose={closeAccountMenu}>

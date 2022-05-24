@@ -16,6 +16,9 @@ const Register = () => {
     const [photo, setPhoto] = React.useState('')
     const [errorFlag, setErrorFlag] = React.useState(false)
     const [errorMessage, setErrorMessage] = React.useState("")
+    const [passwordMatchString, setPasswordMatchString] = React.useState('')
+    const [profilePhoto, setProfilePhoto] = React.useState(null)
+    const emailRegex = new RegExp('^[^\s@]+@([^\s@.,]+\.)+[^\s@.,]{1,}$')
     const updateFirstNameState  = (event: { target?: any; }) => {
         setFirstName(event.target.value);
     }
@@ -30,13 +33,28 @@ const Register = () => {
     }
     const updateConfirmPasswordState = (event: { target?: any; }) => {
         setConfirmPassword(event.target.value)
+        if (password !== event.target.value) {
+            setPasswordMatchString("Passwords do not match")
+        } else {
+            setPasswordMatchString('')
+        }
+    }
+    const updateProfilePhoto = (event: {target?: any;}) => {
+        setProfilePhoto(event.target.value)
     }
     const newUser = () => {
-        axios.post('http://localhost:4941/api/v1/users/register', {firstName: firstName, lastName: lastName, password: password, email: email})
+        axios.post('http://localhost:4941/api/v1/users/register', {firstName: firstName, lastName: lastName, email: email, password: password})
             .then((response) => {
-            if (photo != null) {
-                return
-            }
+                console.log(response.data)
+                let newId = response.data.userId
+                axios.post('http://localhost:4941/api/v1/users/login', {email: email, password: password})
+                    .then((response) => {
+                        if (photo != null) {
+                            axios.put('http://localhost:4941/api/v1/users/' + newId + '/image', profilePhoto).then((response) => {
+
+                            })
+                        }
+                    })
         }, (error) => {
             setErrorFlag(true)
             setErrorMessage(error.toString())
@@ -45,31 +63,30 @@ const Register = () => {
     return (
         <div>
         <h1>Register</h1>
-    <Navbar />
+    <Navbar pageName={"Register"}/>
             <div>
                 <Container maxWidth="sm">
                     <h1>Register</h1>
                 <FormControl>
                     <Stack direction="column" spacing={2}>
                     <Stack direction="row" spacing={1}>
-                        <TextField fullWidth autoCapitalize="on" required id="firstName" label="First Name" onChange={updateFirstNameState}/>
-                        <TextField fullWidth autoCapitalize="on" margin={"dense"} required id="lastName" label="Last Name" onChange={updateLastNameState}/>
+                        <TextField fullWidth autoCapitalize="on" required id="firstName" label="First Name" error={firstName.length < 1} onChange={updateFirstNameState}/>
+                        <TextField fullWidth autoCapitalize="on" margin={"dense"} required id="lastName" label="Last Name" error={lastName.length < 1} onChange={updateLastNameState}/>
                     </Stack>
-                        <TextField required margin={"dense"} fullWidth type="email" id="email" label="Email Address" onChange={updateEmailState}/>
-                    <TextField required margin={"dense"} type="password" fullWidth id="password" label="Password" error={password.length < 6} onChange={updatePasswordState}/>
-                    <TextField required margin={"dense"} type="password" fullWidth id="confirmPassword" error={confirmPassword.length < 6} label="Confirm Password" onChange={updateConfirmPasswordState}/>
-                    <label>
-                    <Input type="file" id="photoUpload" style={{display: "none"}}/>
-                    <Button fullWidth variant="contained" component="span">
+                        <TextField required margin={"dense"} fullWidth type="email" id="email" label="Email Address" error={!emailRegex.test(email)} onChange={updateEmailState}/>
+                    <TextField required margin={"dense"} type="password" fullWidth id="password" label="Password" error={password.length < 6 || passwordMatchString !== ''} onChange={updatePasswordState}/>
+                    <TextField required margin={"dense"} type="password" fullWidth id="confirmPassword" error={confirmPassword.length < 6 || passwordMatchString !== ''} label="Confirm Password" onChange={updateConfirmPasswordState}/>
+                        <h6>{passwordMatchString}</h6>
+
+                    <Button fullWidth variant="contained" component="label">
                         Upload Profile Photo
+                        <Input type="file" id="photoUpload" style={{display: "none"}} onChange={updateProfilePhoto}/>
                     </Button>
-                    </label>
                     <Stack direction="row" spacing={1} justifyContent={"right"}>
                         <Button variant="outlined" color="error">Cancel</Button>
-                        <Button variant="outlined" color="success" onClick={newUser} disabled={confirmPassword !== password}>Submit</Button>
+                        <Button variant="outlined" color="success" onClick={newUser} disabled={passwordMatchString !== ''}>Submit</Button>
                     </Stack>
                     </Stack>
-
                 </FormControl>
                 </Container>
             </div>

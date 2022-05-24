@@ -14,7 +14,7 @@ function App() {
             <Routes>
               <Route path="/auctions" element={<Auctions/>}/>
               <Route path="/register" element={<Register/>}/>
-              <Route path="/navbar" element={<Navbar/>}/>
+              <Route path="/navbar" element={<Navbar pageName={"Default"}/>}/>
               {/*<Route path="/auctions/:id" element={<Auction/>}/>*/}
               {/*<Route path="*" element={<NotFound/>}/>*/}
             </Routes>

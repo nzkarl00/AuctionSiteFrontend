@@ -186,7 +186,7 @@ const Auctions = () => {
                     <Container sx={{ width: 1/5}}>
                         {filter()}
                     </Container>
-                    <Navbar />
+                    <Navbar pageName={"Auctions"} />
                     <Container>
                     <List>
                         {auctionList()}
