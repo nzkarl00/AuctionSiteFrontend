@@ -1,8 +1,8 @@
 import {
     AppBar,
     Box,
-    IconButton,
-    Menu, MenuItem,
+    IconButton, Input, InputAdornment, InputLabel,
+    Menu, MenuItem, TextField,
     Toolbar,
     Typography
 } from "@mui/material";
@@ -11,10 +11,48 @@ import MenuIcon from '@mui/icons-material/Menu'
 import {AccountCircle, Search, VerifiedUser} from "@mui/icons-material";
 import SearchIcon from '@mui/icons-material/Search';
 import React from "react";
+import {useUserStore} from "./store";
 
-const Navbar = (props: { pageName: string | number | boolean | React.ReactElement<any, string | React.JSXElementConstructor<any>> | React.ReactFragment | React.ReactPortal | null | undefined; }) => {
+const Navbar = (props: { pageName: any; loggedIn?: boolean}) => {
     const [anchorElement, setAnchorElement] = React.useState<null | HTMLElement>(null);
+    const token = useUserStore(state => state.userToken)
+    const setToken = useUserStore(state => state.setToken)
     const open = Boolean(anchorElement);
+    const emailRegex = new RegExp('^[^\s@]+@([^\s@.,]+\.)+[^\s@.,]{1,}$')
+    const [email, setEmail] = React.useState('')
+    const [password, setPassword] = React.useState('')
+    const updateEmailState = (event: { target?: any; }) => {
+        setEmail(event.target.value)
+    }
+    const updatePasswordState = (event: { target?: any; }) => {
+        setPassword(event.target.value)
+    }
+    const getLoggedIn = () => {
+        console.log(token)
+        if (token === '') {
+            return (
+                <Box sx={{ flexGrow: 1, alignSelf: "flex-end"}}>
+                    <Input id="navEmail" startAdornment={<InputAdornment position="start"><AccountCircle /></InputAdornment>}/>
+                    <TextField type="password" variant="filled" id="password" label="Password" onChange={updatePasswordState}/>
+
+                </Box>
+            )
+        } else {
+            return (
+            <div>
+                <IconButton id="accountButton" edge={"end"} onClick={openAccountMenu}><AccountCircle sx={{color:"white"}}/></IconButton>
+                <Menu anchorEl={anchorElement} MenuListProps={{"aria-labelledby": "accountButton"}} open={open} onClose={closeAccountMenu}>
+                    <MenuItem><Link to={"/register"}>My Profile</Link></MenuItem>
+                    <MenuItem><Link to={"/register"}>My Auctions</Link></MenuItem>
+                    <MenuItem><Link onClick={deleteToken} to={"/register"}>Sign Out</Link></MenuItem>
+                </Menu>
+            </div>
+            )
+        }
+    }
+    const deleteToken = () => {
+        setToken('')
+    }
     const openAccountMenu = (event: React.MouseEvent<HTMLButtonElement>) => {
         setAnchorElement(event.currentTarget);
     }
@@ -28,12 +66,7 @@ const Navbar = (props: { pageName: string | number | boolean | React.ReactElemen
             <MenuIcon sx={{mr:2}} />
             <Typography variant={"h5"} sx={{mr:2}}>{props.pageName}</Typography>
             <Box sx={{ flexGrow: 1 }} />
-            <IconButton id="accountButton" edge={"end"} onClick={openAccountMenu}><AccountCircle sx={{color:"white"}}/></IconButton>
-            <Menu anchorEl={anchorElement} MenuListProps={{"aria-labelledby": "accountButton"}} open={open} onClose={closeAccountMenu}>
-                <MenuItem><Link to={"/register"}>My Profile</Link></MenuItem>
-                <MenuItem><Link to={"/register"}>My Auctions</Link></MenuItem>
-                <MenuItem><Link to={"/register"}>Sign Out</Link></MenuItem>
-            </Menu>
+            {getLoggedIn()}
         </Toolbar>
     </AppBar>
 

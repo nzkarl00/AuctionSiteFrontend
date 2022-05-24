@@ -2,6 +2,7 @@ import Navbar from "./Navbar";
 import {Button, Container, FormControl, Grid, Input, InputLabel, OutlinedInput, Stack, TextField} from "@mui/material";
 import React, {ReactNode} from "react";
 import axios from "axios";
+import {useUserStore} from "./store";
 
 function Item(props: { children: ReactNode }) {
     return null;
@@ -19,6 +20,7 @@ const Register = () => {
     const [passwordMatchString, setPasswordMatchString] = React.useState('')
     const [profilePhoto, setProfilePhoto] = React.useState(null)
     const emailRegex = new RegExp('^[^\s@]+@([^\s@.,]+\.)+[^\s@.,]{1,}$')
+    const setToken = useUserStore(state => state.setToken)
     const updateFirstNameState  = (event: { target?: any; }) => {
         setFirstName(event.target.value);
     }
@@ -45,15 +47,10 @@ const Register = () => {
     const newUser = () => {
         axios.post('http://localhost:4941/api/v1/users/register', {firstName: firstName, lastName: lastName, email: email, password: password})
             .then((response) => {
-                console.log(response.data)
                 let newId = response.data.userId
                 axios.post('http://localhost:4941/api/v1/users/login', {email: email, password: password})
-                    .then((response) => {
-                        if (photo != null) {
-                            axios.put('http://localhost:4941/api/v1/users/' + newId + '/image', profilePhoto).then((response) => {
-
-                            })
-                        }
+                    .then((response2) => {
+                        setToken(response2.data.token)
                     })
         }, (error) => {
             setErrorFlag(true)
