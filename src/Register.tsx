@@ -21,6 +21,7 @@ const Register = () => {
     const [profilePhoto, setProfilePhoto] = React.useState(null)
     const emailRegex = new RegExp('^[^\s@]+@([^\s@.,]+\.)+[^\s@.,]{1,}$')
     const setToken = useUserStore(state => state.setToken)
+    const setUserId = useUserStore(state => state.setUserId)
     const updateFirstNameState  = (event: { target?: any; }) => {
         setFirstName(event.target.value);
     }
@@ -47,7 +48,7 @@ const Register = () => {
     const newUser = () => {
         axios.post('http://localhost:4941/api/v1/users/register', {firstName: firstName, lastName: lastName, email: email, password: password})
             .then((response) => {
-                let newId = response.data.userId
+                setUserId(response.data.userId)
                 axios.post('http://localhost:4941/api/v1/users/login', {email: email, password: password})
                     .then((response2) => {
                         setToken(response2.data.token)

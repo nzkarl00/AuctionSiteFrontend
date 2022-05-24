@@ -1,11 +1,12 @@
 import axios from 'axios';
-import React from "react";
+import React, { Component } from 'react'
+import Select from 'react-select'
 import {
     Box,
     Card, Checkbox, Chip,
     Container, Divider, FormControl, Grid, InputLabel,
     List,
-    ListItemButton, ListItemText, MenuItem, OutlinedInput, Paper, Select, SelectChangeEvent,
+    ListItemButton, ListItemText, MenuItem, OutlinedInput, Paper, SelectChangeEvent,
     Stack, TextField
 } from "@mui/material";
 import Navbar from "./Navbar";
@@ -56,6 +57,7 @@ const Auctions = () => {
         const {
         target: {value},
         } = event;
+        console.log(event.target)
         setSelectedCategories(
             typeof value === 'string' ? value.split(',') : value,
         );
@@ -145,21 +147,13 @@ const Auctions = () => {
                 <h3>Filter:</h3>
                 <TextField id="searchParams" label="Search" onChange={updateSearch}/>
                 <br></br>
-                <Select id={"categorySelect"} onChange={handleCatSelection} multiple value = {selectedCategories} placeholder={"Categories"}
-                    MenuProps={{sx:{maxHeight: 300}}}
-                    renderValue={(selected) => (
-                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                        {selected.map((value) => (
-                            <Chip key={value} label={value} />
-                        ))}
-                    </Box>
-                    )}>
-                    {categories.map((cat) => (
-                        <MenuItem key={cat.categoryId} value={cat.name}>
-                            <ListItemText primary={cat.name} />
-                        </MenuItem>
-                    ))}
-                </Select>
+                <Select
+                    isMulti
+                    name="categories"
+                    options={categories}
+                    className="basic-multi-select"
+                    classNamePrefix="select"
+                />
             </FormControl>
         </Paper>
         )
