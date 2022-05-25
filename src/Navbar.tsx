@@ -13,6 +13,7 @@ import SearchIcon from '@mui/icons-material/Search';
 import React from "react";
 import {useUserStore} from "./store";
 import PasswordIcon from '@mui/icons-material/Password';
+import axios from "axios";
 
 const Navbar = (props: { pageName: any; loggedIn?: boolean}) => {
     const [anchorElement, setAnchorElement] = React.useState<null | HTMLElement>(null);
@@ -35,35 +36,45 @@ const Navbar = (props: { pageName: any; loggedIn?: boolean}) => {
             backgroundColor: "white"
         }
     }
+    const signIn = () => {
+        console.log(email)
+        console.log(password)
+        axios.post('http://localhost:4941/api/v1/users/login', {email: email, password: password})
+            .then(async (response) => {
+                console.log(response)
+                setToken(response.data.token)
+                setUserId(response.data.userId)
+            })
+    }
     const getLoggedIn = () => {
         console.log(token)
         if (token === '') {
             return (
                 <Grid container justifyContent="flex-end" spacing={1}>
                     <Grid item>
-                    <Input style={styles.loginInput} id="navEmail" startAdornment={<InputAdornment position="start">&nbsp;<AccountCircle/></InputAdornment>}/>
+                    <Input style={styles.loginInput} id="navEmail" onChange={updateEmailState} startAdornment={<InputAdornment position="start">&nbsp;<AccountCircle/></InputAdornment>}/>
                     </Grid>
                     <Grid item>
-                    <Input style={styles.loginInput} type="password" id="navEmail" startAdornment={<InputAdornment position="start">&nbsp;<PasswordIcon/></InputAdornment>}/>
+                    <Input style={styles.loginInput} type="password" id="navEmail" onChange={updatePasswordState} startAdornment={<InputAdornment position="start">&nbsp;<PasswordIcon/></InputAdornment>}/>
                     </Grid>
                     <Grid item>
-                        <Button size="small" color="inherit" variant="outlined">Sign In</Button>
+                        <Button size="small" color="inherit" onClick={signIn} variant="outlined">Sign In</Button>
                     </Grid>
                     <Grid item>
-                        <Button size="small" color="inherit" variant="outlined">Register</Button>
+                        <Button size="small" color="inherit" href={'/register'} variant="outlined">Register</Button>
                     </Grid>
                 </Grid>
             )
         } else {
             return (
-            <div>
-                <IconButton id="accountButton" edge={"end"} onClick={openAccountMenu}><Avatar alt={"User Profile Photo"} src={"http://localhost:4941/api/v1/users/" + "8" + "/image"}/></IconButton>
+                <Grid container justifyContent="flex-end" spacing={1}>
+                <IconButton id="accountButton" edge={"end"} onClick={openAccountMenu}><Avatar alt={"User Profile Photo"} src={"http://localhost:4941/api/v1/users/" + userId + "/image"}/></IconButton>
                 <Menu anchorEl={anchorElement} MenuListProps={{"aria-labelledby": "accountButton"}} open={open} onClose={closeAccountMenu}>
                     <MenuItem><Link to={"/register"}>My Profile</Link></MenuItem>
                     <MenuItem><Link to={"/register"}>My Auctions</Link></MenuItem>
                     <MenuItem><Link onClick={deleteToken} to={"/register"}>Sign Out</Link></MenuItem>
                 </Menu>
-            </div>
+                </Grid>
             )
         }
     }

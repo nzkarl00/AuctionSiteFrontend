@@ -1,5 +1,5 @@
 import axios from 'axios';
-import React, { Component } from 'react'
+import React, {Component, useEffect, useLayoutEffect} from 'react'
 import Select from 'react-select'
 import {
     Box,
@@ -19,25 +19,30 @@ const Auctions = () => {
     const [selectedCategories, setSelectedCategories] = React.useState<Array<string>>([])
     const [search, setSearch] = React.useState('')
     const millisInDay = 86400000;
+    const [catSelect, setCatSelect] = React.useState<Array<{ value: string; label: string; }[]>>([])
     React.useEffect(() => {
         getAuctions()
         getCategories()
     }, [])
     const getCategories = () => {
         axios.get('http://localhost:4941/api/v1/auctions/categories')
-            .then((response) => {
+            .then(async (response) => {
                 setErrorFlag(false)
                 setErrorMessage("")
-                console.log(response.data)
                 setCategories(response.data)
             }, (error) => {
                 setErrorFlag(true)
                 setErrorMessage(error.toString())
             })
     }
-    const updateSearch = (event: { target?: any; }) => {
+    useEffect(() => {
+        updateSearch()
+    })
+    const updateQ = async (event: { target?: any; }) => {
         setSearch(event.target.value)
-        axios.get('http://localhost:4941/api/v1/auctions', {params: {q: event.target.value, status: "OPEN"}})
+    }
+    const updateSearch = () => {
+        axios.get('http://localhost:4941/api/v1/auctions', {params: {q: search, status: "OPEN", categoryIds: selectedCategories}})
             .then((response) => {
                 setAuctions(response.data.auctions)
             })
@@ -53,15 +58,9 @@ const Auctions = () => {
                 setErrorMessage(error.toString())
             })
     }
-    const handleCatSelection = (event: SelectChangeEvent<typeof selectedCategories>) => {
-        const {
-        target: {value},
-        } = event;
-        console.log(event.target)
-        setSelectedCategories(
-            typeof value === 'string' ? value.split(',') : value,
-        );
-    };
+    const updateCats = async (selectedCategories?: any) => {
+        setSelectedCategories(selectedCategories.map((c: { value: any; }) => c.value))
+    }
     const styles = {
         auctionPhoto: {
             height: 120,
@@ -110,10 +109,9 @@ const Auctions = () => {
     }
     const auctionList = () => {
         return auctions.map(a =>
-            <>
                 <Paper elevation={3}>
                     <ListItemButton key={a.auctionId} component="a"
-                              href={'http://localhost:4941/api/v1/auctions/' + a.auctionId} style={styles.auctionItem}>
+                              href={'/auctions/' + a.auctionId} style={styles.auctionItem}>
                 <Grid container spacing={1}>
                     <Grid item sm={2} style={styles.auctionPhoto}>
                         <img alt={a.title + ' auction image'} src={'http://localhost:4941/api/v1/auctions/' + a.auctionId + '/image'}
@@ -137,22 +135,24 @@ const Auctions = () => {
                     </Grid>
                 </Grid>
             </ListItemButton><Divider/>
-                </Paper></>
+                </Paper>
         )
     }
     const filter = () => {
         return (
-        <Paper elevation={2} sx={{padding: 0.1}}>
+        <Paper elevation={3} sx={{padding: 0.1}}>
             <FormControl>
                 <h3>Filter:</h3>
-                <TextField id="searchParams" label="Search" onChange={updateSearch}/>
+                <TextField id="searchParams" label="Search" onChange={updateQ}/>
                 <br></br>
                 <Select
                     isMulti
                     name="categories"
-                    options={categories}
+                    options={categories.map(({ categoryId, name}) => ({ value: categoryId, label: name }))}
                     className="basic-multi-select"
                     classNamePrefix="select"
+                    onChange={updateCats}
+                    placeholder={"Select Categories"}
                 />
             </FormControl>
         </Paper>
@@ -177,10 +177,10 @@ const Auctions = () => {
                 <br></br>
                 <h1>Auctions</h1>
                 <div style={{display: 'flex'}}>
+                    <Navbar pageName={"Auctions"} />
                     <Container sx={{ width: 1/5}}>
                         {filter()}
                     </Container>
-                    <Navbar pageName={"Auctions"} />
                     <Container>
                     <List>
                         {auctionList()}

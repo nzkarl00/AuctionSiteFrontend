@@ -3,6 +3,7 @@ import {Button, Container, FormControl, Grid, Input, InputLabel, OutlinedInput, 
 import React, {ReactNode} from "react";
 import axios from "axios";
 import {useUserStore} from "./store";
+import {blob} from "stream/consumers";
 
 function Item(props: { children: ReactNode }) {
     return null;
@@ -18,10 +19,22 @@ const Register = () => {
     const [errorFlag, setErrorFlag] = React.useState(false)
     const [errorMessage, setErrorMessage] = React.useState("")
     const [passwordMatchString, setPasswordMatchString] = React.useState('')
-    const [profilePhoto, setProfilePhoto] = React.useState(null)
+    const [profilePhoto, setProfilePhoto] = React.useState<File>()
+    const [profilePhotoPreview, setProfilePhotoPreview] = React.useState<string>("https://upload.wikimedia.org/wikipedia/commons/b/b1/Missing-image-232x150.png")
     const emailRegex = new RegExp('^[^\s@]+@([^\s@.,]+\.)+[^\s@.,]{1,}$')
     const setToken = useUserStore(state => state.setToken)
+    const userId = useUserStore(state => state.userId)
     const setUserId = useUserStore(state => state.setUserId)
+    const styles = {
+        photoPreview: {
+            height: 200,
+            width: 200,
+            overflow: 'hidden',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+        }
+    }
     const updateFirstNameState  = (event: { target?: any; }) => {
         setFirstName(event.target.value);
     }
@@ -43,20 +56,35 @@ const Register = () => {
         }
     }
     const updateProfilePhoto = (event: {target?: any;}) => {
-        setProfilePhoto(event.target.value)
+        setProfilePhoto(event.target.files[0])
+        setProfilePhotoPreview(URL.createObjectURL(event.target.files[0]))
     }
     const newUser = () => {
-        axios.post('http://localhost:4941/api/v1/users/register', {firstName: firstName, lastName: lastName, email: email, password: password})
+        axios.post('http://localhost:4941/api/v1/users/register', {
+            firstName: firstName,
+            lastName: lastName,
+            email: email,
+            password: password
+        })
             .then((response) => {
+                let i = response.data.userId
                 setUserId(response.data.userId)
                 axios.post('http://localhost:4941/api/v1/users/login', {email: email, password: password})
-                    .then((response2) => {
+                    .then(async (response2) => {
                         setToken(response2.data.token)
+                        console.log(profilePhoto)
+                        await axios.put('http://localhost:4941/api/v1/users/' + i + '/image', profilePhoto, {
+                            headers: {
+                                "X-Authorization": response2.data.token,
+                                "content-type": profilePhoto?.type ?? 'image/jpeg'
+                            }
+                        })
+
                     })
-        }, (error) => {
-            setErrorFlag(true)
-            setErrorMessage(error.toString())
-        })
+            }, (error) => {
+                setErrorFlag(true)
+                setErrorMessage(error.toString())
+            })
     }
     return (
         <div>
@@ -75,11 +103,16 @@ const Register = () => {
                     <TextField required margin={"dense"} type="password" fullWidth id="password" label="Password" error={password.length < 6 || passwordMatchString !== ''} onChange={updatePasswordState}/>
                     <TextField required margin={"dense"} type="password" fullWidth id="confirmPassword" error={confirmPassword.length < 6 || passwordMatchString !== ''} label="Confirm Password" onChange={updateConfirmPasswordState}/>
                         <h6>{passwordMatchString}</h6>
-
+                        <Grid container justifyContent="center">
+                        <Grid item style={styles.photoPreview}>
+                        <img src={profilePhotoPreview}/>
+                        </Grid>
+                        </Grid>
                     <Button fullWidth variant="contained" component="label">
                         Upload Profile Photo
-                        <Input type="file" id="photoUpload" style={{display: "none"}} onChange={updateProfilePhoto}/>
+                        <Input type="file" id="photoUpload" inputProps={{ accept: 'image' }} style={{display: "none"}} onChange={updateProfilePhoto}/>
                     </Button>
+
                     <Stack direction="row" spacing={1} justifyContent={"right"}>
                         <Button variant="outlined" color="error">Cancel</Button>
                         <Button variant="outlined" color="success" onClick={newUser} disabled={passwordMatchString !== ''}>Submit</Button>
