@@ -194,6 +194,7 @@ const Auctions = () => {
                     onChange={updateSort}
                     placeholder={"Sort By"}
                 />
+                <br></br>
             </FormControl>
         </Paper>
         )
@@ -215,11 +216,13 @@ const Auctions = () => {
                 <br></br>
                 <br></br>
                 <br></br>
-                <div><h1>Auctions</h1></div>
+                <br></br>
                 <div style={{display: 'flex'}}>
                     <Navbar pageName={"Auctions"} />
                     <Container sx={{ width: 1/5}}>
+                        <List>
                         {filter()}
+                        </List>
                     </Container>
                     <Container>
                     <List>
@@ -227,7 +230,9 @@ const Auctions = () => {
                     </List>
                     </Container>
                     <Container sx={{ width: 1/5}}>
+                    <List>
                         <h2>dsadafds</h2>
+                    </List>
                     </Container>
                 </div>
             </div>
