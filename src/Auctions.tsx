@@ -2,10 +2,11 @@ import axios from 'axios';
 import React, {Component, useEffect, useLayoutEffect} from 'react'
 import Select from 'react-select'
 import {
+    Avatar,
     Box,
     Card, Checkbox, Chip,
     Container, Divider, FormControl, Grid, InputLabel,
-    List,
+    List, ListItem, ListItemAvatar,
     ListItemButton, ListItemText, MenuItem, OutlinedInput, Paper, SelectChangeEvent,
     Stack, TextField
 } from "@mui/material";
@@ -18,6 +19,8 @@ const Auctions = () => {
     const [categories, setCategories] = React.useState<Array<category>>([])
     const [selectedCategories, setSelectedCategories] = React.useState<Array<string>>([])
     const [search, setSearch] = React.useState('')
+    const [status, setStatus] = React.useState('OPEN')
+    const [sort, setSort] = React.useState('CLOSING_SOON')
     const millisInDay = 86400000;
     const [catSelect, setCatSelect] = React.useState<Array<{ value: string; label: string; }[]>>([])
     React.useEffect(() => {
@@ -38,11 +41,11 @@ const Auctions = () => {
     useEffect(() => {
         updateSearch()
     })
-    const updateQ = async (event: { target?: any; }) => {
+    const updateQ = (event: { target?: any; }) => {
         setSearch(event.target.value)
     }
     const updateSearch = () => {
-        axios.get('http://localhost:4941/api/v1/auctions', {params: {q: search, status: "OPEN", categoryIds: selectedCategories}})
+        axios.get('http://localhost:4941/api/v1/auctions', {params: {q: search, status: status, categoryIds: selectedCategories, sortBy: sort}})
             .then((response) => {
                 setAuctions(response.data.auctions)
             })
@@ -58,8 +61,14 @@ const Auctions = () => {
                 setErrorMessage(error.toString())
             })
     }
-    const updateCats = async (selectedCategories?: any) => {
+    const updateCats = (selectedCategories?: any) => {
         setSelectedCategories(selectedCategories.map((c: { value: any; }) => c.value))
+    }
+    const updateStatus = (selectedStatus?: any) => {
+        setStatus(selectedStatus.value)
+    }
+    const updateSort = (selectedSort?: any) => {
+        setSort(selectedSort.value)
     }
     const styles = {
         auctionPhoto: {
@@ -72,6 +81,10 @@ const Auctions = () => {
         },
         auctionItem: {
             borderColor: 'black'
+        },
+        center: {
+            display: 'flex',
+            alignItems: 'center',
         },
         reserveNotMet: {
             color: 'gray'
@@ -107,6 +120,7 @@ const Auctions = () => {
             return <p>Closing in {Math.floor(delta/millisInDay)} days</p>
         }
     }
+
     const auctionList = () => {
         return auctions.map(a =>
                 <Paper elevation={3}>
@@ -120,18 +134,24 @@ const Auctions = () => {
                                  currentTarget.src="https://upload.wikimedia.org/wikipedia/commons/b/b1/Missing-image-232x150.png";
                              }} height={120}/>
                     </Grid>
-                    <Grid item sm={8}>
+                    <Grid item sm={6}>
                             <ListItemText>
                                 <h3>{a.title}</h3>
-                                <h4>{timeRemaining(a)}</h4>
+                                {timeRemaining(a)}
                             </ListItemText>
                     </Grid>
-                    <Grid item sm={2}>
+                    <Grid item sm={1.5}>
                         <Stack>
                             <ListItemText>{auctionReserve(a)}</ListItemText>
                             <ListItemText>Reserve: ${a.reserve}</ListItemText>
                         </Stack>
 
+                    </Grid>
+                    <Grid item sm={1.8} style={styles.center} sx={{justifyContent: 'center'}}>
+                        {a.sellerFirstName} {a.sellerLastName}
+                    </Grid>
+                    <Grid item sm={0.7} style={styles.center}>
+                        <Avatar sx={{height: 50, width: 50}} alt={a.sellerFirstName + " " + a.sellerLastName} src={"http://localhost:4941/api/v1/users/" + a.sellerId + "/image"}/>
                     </Grid>
                 </Grid>
             </ListItemButton><Divider/>
@@ -154,6 +174,26 @@ const Auctions = () => {
                     onChange={updateCats}
                     placeholder={"Select Categories"}
                 />
+                <br></br>
+                <Select
+                    name="status"
+                    options={[{value: "ANY", label: "Any"}, {value: "OPEN", label: "Open"}, {value: "CLOSED", label: "Closed"}]}
+                    className="basic-multi-select"
+                    classNamePrefix="select"
+                    onChange={updateStatus}
+                    placeholder={"Select Status"}
+                />
+                <br></br>
+                <Select
+                    name="sorting"
+                    options={[{value: "ALPHABETICAL_ASC", label: "A-Z"}, {value: "ALPHABETICAL_DESC", label: "Z-A"}, {value: "BIDS_ASC", label: "Lowest Bid"}
+                        , {value: "BIDS_DESC", label: "Highest Bid"}, {value: "CLOSING_SOON", label: "Closing Soon"}, {value: "CLOSING_LAST", label: "Closing Last"}
+                        , {value: "RESERVE_ASC", label: "Lowest Reserve"}, {value: "RESERVE_DESC", label: "Highest Reserve"}]}
+                    className="basic-multi-select"
+                    classNamePrefix="select"
+                    onChange={updateSort}
+                    placeholder={"Sort By"}
+                />
             </FormControl>
         </Paper>
         )
@@ -175,7 +215,7 @@ const Auctions = () => {
                 <br></br>
                 <br></br>
                 <br></br>
-                <h1>Auctions</h1>
+                <div><h1>Auctions</h1></div>
                 <div style={{display: 'flex'}}>
                     <Navbar pageName={"Auctions"} />
                     <Container sx={{ width: 1/5}}>

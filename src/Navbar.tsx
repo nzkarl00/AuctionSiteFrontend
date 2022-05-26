@@ -72,7 +72,7 @@ const Navbar = (props: { pageName: any; loggedIn?: boolean}) => {
                 <Menu anchorEl={anchorElement} MenuListProps={{"aria-labelledby": "accountButton"}} open={open} onClose={closeAccountMenu}>
                     <MenuItem><Link to={"/register"}>My Profile</Link></MenuItem>
                     <MenuItem><Link to={"/register"}>My Auctions</Link></MenuItem>
-                    <MenuItem><Link onClick={deleteToken} to={"/register"}>Sign Out</Link></MenuItem>
+                    <MenuItem onClick={deleteToken}>Sign Out</MenuItem>
                 </Menu>
                 </Grid>
             )

@@ -38,3 +38,8 @@ type userPatch = {
     password: string,
     currentPassword: string
 }
+
+type userPersist = {
+    id: number,
+    token: string
+}
