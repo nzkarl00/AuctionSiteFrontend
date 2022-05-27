@@ -1,37 +1,85 @@
 import {Link, useParams} from "react-router-dom";
-import React from "react";
+import React, {useEffect} from "react";
 import axios from "axios";
 import Navbar from "./Navbar";
 import {
+    Alert, AlertColor,
     Avatar,
-    Box,
+    Box, Button,
     Container,
     Divider,
-    Grid,
+    Grid, ImageList, ImageListItem, ImageListItemBar, Input,
     List,
-    Paper,
+    Paper, Snackbar,
     Table, TableBody,
     TableCell,
-    TableContainer, TableHead, TableRow,
+    TableContainer, TableHead, TableRow, TextField,
     Typography
 } from "@mui/material";
 import auctions from "./Auctions";
+import {useUserStore} from "./store";
 
 const Auction = () => {
-    const {id} = useParams();
+    const {id} = useParams<string>();
     const [auction, setAuction] = React.useState({title: 'Not Found', categoryId: -1, sellerId: -1, reserve: -1, endDate: '', auctionId: -1,
         sellerFirstName: '', sellerLastName: '', highestBid: -1, numBids: -1, description: ''})
-    const [bids, setBids] = React.useState<Array<bid>>([{bidderId: -1,
-        amount: 0,
-        firstName: '',
-        lastName: '',
-        timestamp: ''}])
+    const [bids, setBids] = React.useState<Array<bid>>([{bidderId: 0, amount: 0, firstName: '', lastName: '', timestamp: ''}])
+    const [bidAmount, setBidAmount] = React.useState(0);
+    const token = useUserStore(state => state.userToken)
+    const userId = useUserStore(state => state.userId)
     const [errorFlag, setErrorFlag] = React.useState(false)
     const [errorMessage, setErrorMessage] = React.useState("")
+    const [snackOpen, setSnackOpen] = React.useState(false)
+    const [snackMessage, setSnackMessage] = React.useState("")
+    const [snackSeverity, setSnackSeverity] = React.useState<AlertColor>("success")
+    const [relatedAuctions, setRelatedAuctions] = React.useState<Array<auction>>([])
+    const handleSnackClose = (event?: React.SyntheticEvent | Event,
+                              reason?: string) => {
+        if (reason === 'clickaway') {
+            return;
+        }
+        setSnackOpen(false);
+    };
     React.useEffect(() => {
+        setBids([])
         getAuction()
-        getBids()
     }, [id])
+    const updateBidAmount = (event: { target?: any; }) => {
+        setBidAmount(event.target.value);
+    }
+    const getRelatedAuctions = (catId: number, sellerId: number) => {
+
+        let items = new Array<auction>()
+        axios.get('http://localhost:4941/api/v1/auctions', {params: {categoryIds: catId}})
+            .then((response) => {
+                axios.get('http://localhost:4941/api/v1/auctions', {params: {sellerId: sellerId}})
+                    .then((response2) => {
+                        if (typeof id === "string") {
+                            console.log(catId, sellerId)
+                            console.log(Array.from(new Set(response.data.auctions.concat(response2.data.auctions).filter((auc: { auctionId: number; }) => auc.auctionId !== parseInt(id, 10)))))
+                            setRelatedAuctions(Array.from(new Set(response.data.auctions.concat(response2.data.auctions).filter((auc: { auctionId: number; }) => auc.auctionId !== parseInt(id, 10)))))
+                        }
+                    })
+            })
+    }
+    const placeBid = () => {
+        if (token === '') {
+            setSnackSeverity("error")
+            setSnackOpen(true)
+            setSnackMessage("You must log in to place a bid")
+        }
+        axios.post('http://localhost:4941/api/v1/auctions/' + id + '/bids', {"amount": parseInt(String(bidAmount), 10)}, {headers: {"X-Authorization": token}})
+            .then((response) => {
+                getBids()
+                console.log((new Date).toLocaleDateString() + ' ' + (new Date).toLocaleTimeString())
+                setSnackSeverity("success")
+                setSnackMessage("Bid Placed successfully")
+                setSnackOpen(true)
+            }, (error) => {
+                setErrorFlag(true)
+                setErrorMessage(error.toString())
+            })
+    }
     const styles = {
         auctionPhoto: {
             height: 400,
@@ -48,6 +96,9 @@ const Auction = () => {
         },
         reserveMet: {
             color: 'orange'
+        },
+        reserveSold: {
+            color: 'green'
         },
         center: {
             display: 'flex',
@@ -71,49 +122,67 @@ const Auction = () => {
                 setErrorFlag(false)
                 setErrorMessage("")
                 setAuction(response.data)
+                getRelatedAuctions(response.data.categoryId, response.data.sellerId)
+                getBids()
             }, (error) => {
                 setErrorFlag(true)
                 setErrorMessage(error.toString())
             })
     }
-    const auctionReserve = () => {
-        if (!auction.highestBid) {
-            return (
-                <Grid container spacing={1} style={{justifyContent: "center"}}>
-                    <Grid item sm={12} style={styles.center}>
-                <h3 style={styles.reserveNotMet}>No bids</h3>
-                    </Grid>
-                <h3 >Reserve: ${auction.reserve}</h3>
-                </Grid>
-            )
-        }
-        if (auction.reserve > auction.highestBid) {
-            return (
-                <Grid container spacing={1} style={{justifyContent: "center"}}>
-                    <Grid item sm={2.5} style={styles.center} sx={{justifyContent: 'center'}}>
-                        <Typography variant="h6" style={styles.reserveNotMet}>Current Bid: ${auction.highestBid} </Typography>
-                    </Grid>
-                    <Grid item sm={0.5} style={styles.center}>
-                        <Link to={"users/" + bids[0].bidderId}><Avatar sx={{height: 50, width: 50}} alt={bids[0].firstName + " " + bids[0].lastName} src={"http://localhost:4941/api/v1/users/" + bids[0].bidderId + "/image"}/></Link>
-                    </Grid>
-                    <Grid item sm={2.5} style={styles.center} sx={{justifyContent: 'center'}}>
-                        <Typography variant="h6"><Link to={"users/" + bids[0].bidderId}>{bids[0].firstName} {bids[0].lastName}</Link></Typography>
-                    </Grid>
-                    <Grid item sm={12} style={{textAlign: 'center'}}>
-                        <Typography variant="h6">Reserve: ${auction.reserve}</Typography>
-                    </Grid>
-                </Grid>
-            )
+    const bidPlacer = () => {
+        if ((new Date(auction.endDate)).getTime() < Date.now()) {
+            return auctionReserve()
         } else {
             return (
                 <Grid container spacing={1} style={{justifyContent: "center"}}>
-                    <Grid item sm={2.5} style={styles.center} sx={{justifyContent: 'center'}}>
-                        <Typography variant="h6" style={styles.reserveMet}>Current Bid: ${auction.highestBid} </Typography>
+                    <Grid item sm={6}>
+                        {auctionReserve()}
                     </Grid>
-                    <Grid item sm={0.5} style={styles.center}>
+                    <Grid item sm={4} style={{display: "flex", alignItems: "center", justifyContent: "right"}}>
+                        $&nbsp;<Input type="number" onChange={updateBidAmount} inputProps={{ min: auction.highestBid+1, inputMode: 'numeric', pattern: '[0-9]*' }} />
+                    </Grid>
+                    <Grid item sm={2} style={{display: "flex", alignItems: "center", justifyContent: "left"}}>
+                        <Button variant="contained" onClick={placeBid}>Place Bid</Button>
+                    </Grid>
+                </Grid>
+            )
+        }
+    }
+    const auctionReserve = () => {
+        let text = <Typography variant="h6" style={styles.reserveNotMet}>Closed: Unsold</Typography>
+        if (bids.length === 0) {
+            if ((new Date(auction.endDate)).getTime() > Date.now()) {
+                text = <Typography align="center" variant="h6" style={styles.reserveNotMet}>No Bids</Typography>
+            }
+            return (
+                <Grid container spacing={1} style={{justifyContent: "center"}}>
+                    <Grid item sm={12} style={{textAlign: "center"}}>
+                        {text}
+                    </Grid>
+                    <h3 >Reserve: ${auction.reserve}</h3>
+                </Grid>
+            )
+        } else {
+        if ((new Date(auction.endDate)).getTime() < Date.now()) {
+            if (auction.highestBid >= auction.reserve) {
+                text = <Typography variant="h6" style={styles.reserveSold}>Sold For: ${auction.highestBid} </Typography>
+            }
+        } else {
+            if (auction.highestBid < auction.reserve) {
+                text = <Typography variant="h6" style={styles.reserveNotMet}>Current Bid: ${auction.highestBid} </Typography>
+            } else {
+                text = <Typography variant="h6" style={styles.reserveMet}>Current Bid: ${auction.highestBid} </Typography>
+            }
+        }
+            return (
+                <Grid container spacing={0} style={{justifyContent: "center"}}>
+                    <Grid item sm={5.5} style={styles.center} sx={{justifyContent: 'center'}}>
+                        {text}
+                    </Grid>
+                    <Grid item sm={1} style={styles.center} sx={{justifyContent: 'center'}}>
                         <Link to={"users/" + bids[0].bidderId}><Avatar sx={{height: 50, width: 50}} alt={bids[0].firstName + " " + bids[0].lastName} src={"http://localhost:4941/api/v1/users/" + bids[0].bidderId + "/image"}/></Link>
                     </Grid>
-                    <Grid item sm={2.5} style={styles.center} sx={{justifyContent: 'center'}}>
+                    <Grid item sm={5.5} style={styles.center} sx={{justifyContent: 'center'}}>
                         <Typography variant="h6"><Link to={"users/" + bids[0].bidderId}>{bids[0].firstName} {bids[0].lastName}</Link></Typography>
                     </Grid>
                     <Grid item sm={12} style={{textAlign: 'center'}}>
@@ -175,9 +244,9 @@ const Auction = () => {
                     <Grid container spacing={1} style={{justifyContent: "center"}}>
 
                     <Grid item style={styles.center} sx={{justifyContent: 'center'}}>
-                        <Link to={"users/" + bids[0].bidderId}>{bid.firstName} {bid.lastName} </Link>
+                        <Link to={"users/" + bid.bidderId}>{bid.firstName} {bid.lastName} </Link>
                         &nbsp;&nbsp;&nbsp;
-                        <Link to={"users/" + bids[0].bidderId}><Avatar sx={{height: 35, width: 35}} alt={bid.firstName + " " + bid.lastName} src={"http://localhost:4941/api/v1/users/" + bid.bidderId + "/image"}/></Link>
+                        <Link to={"users/" + bid.bidderId}><Avatar sx={{height: 35, width: 35}} alt={bid.firstName + " " + bid.lastName} src={"http://localhost:4941/api/v1/users/" + bid.bidderId + "/image"}/></Link>
                     </Grid>
 
                 </Grid>
@@ -185,78 +254,119 @@ const Auction = () => {
             </TableRow>
         )
     }
+    const displayRelatedAuctions = () => {
+        return (
+            <Paper style={{justifyContent: "center", paddingTop: 15}}>
+            <Typography variant="h5" align={'center'} style={{marginBottom: 10}}>Related Auctions</Typography>
+                <Divider />
+                <br></br>
+            <ImageList cols={1} sx={{width: "100%", height: "100%" }}>
+                <Grid container style={{justifyContent: "center"}}>
+                {relatedAuctions.map((related) => (
+                    <Link to={'/auctions/' + related.auctionId}>
+                    <ImageListItem key={related.auctionId} sx={{}}>
+                        <img
+                            src={'http://localhost:4941/api/v1/auctions/' + related.auctionId + '/image'}
+                            srcSet={'http://localhost:4941/api/v1/auctions/' + related.auctionId + '/image'}
+                            alt={related.title}/>
+                        <ImageListItemBar
+                            title={related.title}
+                            subtitle={<span>Seller: {related.sellerFirstName} {related.sellerLastName}</span>}
+                            position="below"
+                        />
+                        <Divider/>
+                    </ImageListItem>
+                    </Link>
+                ))}
+                </Grid>
+            </ImageList>
+            </Paper>
+        );
+    }
     return (
         <div>
             <br></br>
             <br></br>
             <br></br>
             <br></br>
-            <div style={{display: 'flex'}}>
-                <Navbar pageName={auction.title} />
-                <Container sx={{ width: 1/5}}>
-                    <List>
-                    </List>
-                </Container>
-                <Container>
-                    <List sx={{textAlign: "left"}}>
-                        <Paper sx={{paddingX: 2, paddingY: 0.1}}>
-                            <Grid container spacing={1}>
-                                <Grid item sm={7}>
-                            <Typography variant={"h3"} align={'left'}>{auction.title}</Typography>
+                <div style={{display: 'flex'}}>
+                    <Navbar pageName={auction.title} />
+                    <Container sx={{ width: 1/5}}>
+                        <List>
+                        </List>
+                    </Container>
+                    <Container>
+                        <List sx={{textAlign: "left"}}>
+                            <Paper sx={{paddingX: 2, paddingY: 0.1}}>
+                                <Grid container spacing={1}>
+                                    <Grid item sm={7}>
+                                <Typography variant={"h3"} align={'left'}>{auction.title}</Typography>
+                                    </Grid>
+                                    <Grid item sm={4} style={{display: "flex", alignItems: "center", justifyContent: "right"}}>
+                                <Typography variant={"h6"} align={'right'} alignSelf={"center"}>Seller: {auction.sellerFirstName} {auction.sellerLastName}</Typography>
+                                    </Grid>
+                                    <Grid item sm={1} style={{display: "flex", alignItems: "center", justifyContent: "left"}}>
+                                    <Avatar sx={{height: 35, width: 35}} alt={auction.sellerFirstName + " " + auction.sellerLastName} src={"http://localhost:4941/api/v1/users/" + auction.sellerId + "/image"}/>
+                                    </Grid>
                                 </Grid>
-                                <Grid item sm={4}>
-                            <Typography variant={"h6"} align={'right'} alignSelf={"center"}>Seller: {auction.sellerFirstName}{auction.sellerLastName}</Typography>
-                                </Grid>
-                                <Grid item sm={1}>
-                                <Avatar sx={{height: 35, width: 35}} alt={auction.sellerFirstName + " " + auction.sellerLastName} src={"http://localhost:4941/api/v1/users/" + auction.sellerId + "/image"}/>
-                                </Grid>
-                            </Grid>
-                            <Divider />
-                            <br></br>
-
-                        <div>
-                            <Grid container spacing={1}>
-                                <Grid item sm={7} style={styles.auctionPhoto}>
-                        <img alt={auction.title + ' auction image'} src={'http://localhost:4941/api/v1/auctions/' + auction.auctionId + '/image'}
-                             onError={({ currentTarget }) => {
-                                 currentTarget.onerror = null; // prevents looping
-                                 currentTarget.src="https://upload.wikimedia.org/wikipedia/commons/b/b1/Missing-image-232x150.png";
-                             }} height={400} />
-                                </Grid>
-                                <Grid item sm={5}>
-                                    <Box sx={{overflow: 'auto'}}>
-                                    {auction.description}
-                                        <br></br>
-                                        <br></br>
-                                        Closing: {getTime(auction.endDate)}
-                                    </Box>
-                                </Grid>
-                            </Grid>
-                            <br></br>
-                        </div>
-                            <Divider />
-                        <div>
-                            <br></br>
-                            {auctionReserve()}
-                            <br></br>
-                            <Divider />
-                        </div>
-                            <br></br>
-                            <div>
-                                <Typography variant={'h5'} align={'center'}>Bid History: {bids.length} bid(s)</Typography>
+                                <Divider />
                                 <br></br>
-                                {bidsTable()}
-                            </div>
-                            <br></br>
-                        </Paper>
-                    </List>
 
-                </Container>
-                <Container sx={{ width: 1/5}}>
-                    <List>
-                    </List>
+                            <div>
+                                <Grid container spacing={1}>
+                                    <Grid item sm={7} style={styles.auctionPhoto}>
+                            <img alt={auction.title + ' auction image'} src={'http://localhost:4941/api/v1/auctions/' + auction.auctionId + '/image'}
+                                 onError={({ currentTarget }) => {
+                                     currentTarget.onerror = null; // prevents looping
+                                     currentTarget.src="https://upload.wikimedia.org/wikipedia/commons/b/b1/Missing-image-232x150.png";
+                                 }} height={400} />
+                                    </Grid>
+                                    <Grid item sm={5}>
+                                        <Box sx={{overflow: 'auto'}}>
+                                        {auction.description}
+                                            <br></br>
+                                            <br></br>
+                                            Closing: {getTime(auction.endDate)}
+                                        </Box>
+                                    </Grid>
+                                </Grid>
+                                <br></br>
+                            </div>
+                                <Divider />
+                            <div>
+                                <br></br>
+                                {bidPlacer()}
+                                <br></br>
+                                <Divider />
+                            </div>
+                                <br></br>
+                                <div>
+                                    <Typography variant={'h5'} align={'center'}>Bid History: {bids.length} bid(s)</Typography>
+                                    <br></br>
+                                    {bidsTable()}
+                                </div>
+                                <br></br>
+                            </Paper>
+                        </List>
+
+                    </Container>
+                    <Container sx={{ width: 1/5}}>
+                        <List>
+                            {displayRelatedAuctions()}
+                        </List>
                 </Container>
             </div>
+            <Snackbar
+                autoHideDuration={6000}
+                open={snackOpen}
+                onClose={handleSnackClose}
+                key={snackMessage}
+            >
+                <Alert onClose={handleSnackClose} severity={snackSeverity} sx={{
+                    width: '100%' }}>
+                    {snackMessage}
+                </Alert>
+            </Snackbar>
         </div>
     )
 }

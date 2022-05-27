@@ -91,22 +91,37 @@ const Auctions = () => {
         },
         reserveMet: {
             color: 'orange'
+        },
+        reserveSold: {
+            color: 'green'
         }
     }
     const auctionReserve = (a: auction) => {
         if (!a.highestBid) {
-            return (
-                <p style={styles.reserveNotMet}>No bids</p>
-            )
-        }
-        if (a.reserve > a.highestBid) {
-            return (
-                <p style={styles.reserveNotMet}>Current Bid: ${a.highestBid}</p>
-            )
+            if ((new Date(a.endDate)).getTime() > Date.now()) {
+                return <p style={styles.reserveNotMet}>No bids</p>
+            } else {
+                return <p style={styles.reserveNotMet}>Closed: Unsold</p>
+            }
         } else {
-            return (
-                <p style={styles.reserveMet}>Current bid: ${a.highestBid}</p>
-            )
+            if ((new Date(a.endDate)).getTime() < Date.now()) {
+                if (a.highestBid >= a.reserve) {
+                    return <p style={styles.reserveSold}>Sold For: ${a.highestBid}</p>
+                } else {
+                    return <p style={styles.reserveNotMet}>Closed: Unsold</p>
+
+                }
+            } else {
+                if (a.reserve > a.highestBid) {
+                    return (
+                        <p style={styles.reserveNotMet}>Current Bid: ${a.highestBid}</p>
+                    )
+                } else {
+                    return (
+                        <p style={styles.reserveMet}>Current bid: ${a.highestBid}</p>
+                    )
+                }
+            }
         }
     }
     const timeRemaining = (a: auction) => {
@@ -134,13 +149,13 @@ const Auctions = () => {
                                  currentTarget.src="https://upload.wikimedia.org/wikipedia/commons/b/b1/Missing-image-232x150.png";
                              }} height={120}/>
                     </Grid>
-                    <Grid item sm={6}>
+                    <Grid item sm={5.5}>
                             <ListItemText>
                                 <h3>{a.title}</h3>
                                 {timeRemaining(a)}
                             </ListItemText>
                     </Grid>
-                    <Grid item sm={1.5}>
+                    <Grid item sm={2}>
                         <Stack>
                             <ListItemText>{auctionReserve(a)}</ListItemText>
                             <ListItemText>Reserve: ${a.reserve}</ListItemText>

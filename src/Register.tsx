@@ -72,7 +72,6 @@ const Register = () => {
                 axios.post('http://localhost:4941/api/v1/users/login', {email: email, password: password})
                     .then(async (response2) => {
                         setToken(response2.data.token)
-                        console.log(profilePhoto)
                         await axios.put('http://localhost:4941/api/v1/users/' + i + '/image', profilePhoto, {
                             headers: {
                                 "X-Authorization": response2.data.token,
