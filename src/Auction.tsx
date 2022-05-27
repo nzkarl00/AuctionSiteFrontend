@@ -94,7 +94,7 @@ const Auction = () => {
                         <Typography variant="h6" style={styles.reserveNotMet}>Current Bid: ${auction.highestBid} </Typography>
                     </Grid>
                     <Grid item sm={0.5} style={styles.center}>
-                        <Avatar sx={{height: 50, width: 50}} alt={bids[0].firstName + " " + bids[0].lastName} src={"http://localhost:4941/api/v1/users/" + bids[0].bidderId + "/image"}/>
+                        <Link to={"users/" + bids[0].bidderId}><Avatar sx={{height: 50, width: 50}} alt={bids[0].firstName + " " + bids[0].lastName} src={"http://localhost:4941/api/v1/users/" + bids[0].bidderId + "/image"}/></Link>
                     </Grid>
                     <Grid item sm={2.5} style={styles.center} sx={{justifyContent: 'center'}}>
                         <Typography variant="h6"><Link to={"users/" + bids[0].bidderId}>{bids[0].firstName} {bids[0].lastName}</Link></Typography>
@@ -111,7 +111,7 @@ const Auction = () => {
                         <Typography variant="h6" style={styles.reserveMet}>Current Bid: ${auction.highestBid} </Typography>
                     </Grid>
                     <Grid item sm={0.5} style={styles.center}>
-                        <Avatar sx={{height: 50, width: 50}} alt={bids[0].firstName + " " + bids[0].lastName} src={"http://localhost:4941/api/v1/users/" + bids[0].bidderId + "/image"}/>
+                        <Link to={"users/" + bids[0].bidderId}><Avatar sx={{height: 50, width: 50}} alt={bids[0].firstName + " " + bids[0].lastName} src={"http://localhost:4941/api/v1/users/" + bids[0].bidderId + "/image"}/></Link>
                     </Grid>
                     <Grid item sm={2.5} style={styles.center} sx={{justifyContent: 'center'}}>
                         <Typography variant="h6"><Link to={"users/" + bids[0].bidderId}>{bids[0].firstName} {bids[0].lastName}</Link></Typography>
@@ -156,6 +156,10 @@ const Auction = () => {
             </TableContainer>
         )
     }
+    const getTime = (dateString: string) => {
+        const d = new Date(dateString)
+        return d.toLocaleString()
+    }
     const bidRows = () => {
         return bids.map((bid: bid) =>
             <TableRow hover
@@ -165,14 +169,15 @@ const Auction = () => {
                     ${bid.amount}
                 </TableCell>
                 <TableCell align={'center'}>
-                    {Date(bid.timestamp)}
+                    {getTime(bid.timestamp)}
                 </TableCell>
                 <TableCell align={'center'}>
                     <Grid container spacing={1} style={{justifyContent: "center"}}>
-                    <Grid item sm={6} style={styles.center} sx={{justifyContent: 'center'}}>
-                        {bid.firstName} {bid.lastName}
+
+                    <Grid item style={styles.center} sx={{justifyContent: 'center'}}>
+                        <Link to={"users/" + bids[0].bidderId}>{bid.firstName} {bid.lastName} </Link>
                         &nbsp;&nbsp;&nbsp;
-                        <Avatar sx={{height: 35, width: 35}} alt={bid.firstName + " " + bid.lastName} src={"http://localhost:4941/api/v1/users/" + bid.bidderId + "/image"}/>
+                        <Link to={"users/" + bids[0].bidderId}><Avatar sx={{height: 35, width: 35}} alt={bid.firstName + " " + bid.lastName} src={"http://localhost:4941/api/v1/users/" + bid.bidderId + "/image"}/></Link>
                     </Grid>
 
                 </Grid>
@@ -195,7 +200,17 @@ const Auction = () => {
                 <Container>
                     <List sx={{textAlign: "left"}}>
                         <Paper sx={{paddingX: 2, paddingY: 0.1}}>
-                        <h1>{auction.title}</h1>
+                            <Grid container spacing={1}>
+                                <Grid item sm={7}>
+                            <Typography variant={"h3"} align={'left'}>{auction.title}</Typography>
+                                </Grid>
+                                <Grid item sm={4}>
+                            <Typography variant={"h6"} align={'right'} alignSelf={"center"}>Seller: {auction.sellerFirstName}{auction.sellerLastName}</Typography>
+                                </Grid>
+                                <Grid item sm={1}>
+                                <Avatar sx={{height: 35, width: 35}} alt={auction.sellerFirstName + " " + auction.sellerLastName} src={"http://localhost:4941/api/v1/users/" + auction.sellerId + "/image"}/>
+                                </Grid>
+                            </Grid>
                             <Divider />
                             <br></br>
 
@@ -211,9 +226,13 @@ const Auction = () => {
                                 <Grid item sm={5}>
                                     <Box sx={{overflow: 'auto'}}>
                                     {auction.description}
+                                        <br></br>
+                                        <br></br>
+                                        Closing: {getTime(auction.endDate)}
                                     </Box>
                                 </Grid>
                             </Grid>
+                            <br></br>
                         </div>
                             <Divider />
                         <div>
@@ -222,9 +241,13 @@ const Auction = () => {
                             <br></br>
                             <Divider />
                         </div>
+                            <br></br>
                             <div>
-                                    {bidsTable()}
+                                <Typography variant={'h5'} align={'center'}>Bid History: {bids.length} bid(s)</Typography>
+                                <br></br>
+                                {bidsTable()}
                             </div>
+                            <br></br>
                         </Paper>
                     </List>
 
