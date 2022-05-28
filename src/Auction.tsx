@@ -9,8 +9,8 @@ import {
     Container,
     Divider,
     Grid, ImageList, ImageListItem, ImageListItemBar, Input,
-    List, Modal,
-    Paper, Snackbar,
+    List, MenuItem, Modal,
+    Paper, Snackbar, Stack,
     Table, TableBody,
     TableCell,
     TableContainer, TableHead, TableRow, TextField,
@@ -33,7 +33,15 @@ const Auction = () => {
     const [snackMessage, setSnackMessage] = React.useState("")
     const [snackSeverity, setSnackSeverity] = React.useState<AlertColor>("success")
     const [relatedAuctions, setRelatedAuctions] = React.useState<Array<auction>>([])
-    const [open, setOpen] = React.useState(false);
+    const [open, setOpen] = React.useState(false)
+    const [editActive, setEditActive] = React.useState(false)
+    const [newTitle, setNewTitle] = React.useState<string>(auction.title)
+    const [categories, setCategories] = React.useState<Array<category>>([])
+    const [newCategory, setNewCategory] = React.useState<number>(auction.categoryId)
+    const [newDescription, setNewDescription] = React.useState<string>(auction.description)
+    const [newReserve, setNewReserve] = React.useState<number>(auction.reserve)
+    const [newEnd, setNewEnd] = React.useState('')
+    const [defaultDate, setDefaultDate] = React.useState<string>('')
     const nav = useNavigate()
     const handleSnackClose = (event?: React.SyntheticEvent | Event,
                               reason?: string) => {
@@ -45,6 +53,7 @@ const Auction = () => {
     React.useEffect(() => {
         setBids([])
         getAuction()
+        getCategories()
     }, [id])
     const updateBidAmount = (event: { target?: any; }) => {
         setBidAmount(event.target.value);
@@ -59,6 +68,17 @@ const Auction = () => {
                             setRelatedAuctions(Array.from(new Set(response.data.auctions.concat(response2.data.auctions).filter((auc: { auctionId: number; }) => auc.auctionId !== parseInt(id, 10)))))
                         }
                     })
+            })
+    }
+    const getCategories = () => {
+        axios.get('http://localhost:4941/api/v1/auctions/categories')
+            .then(async (response) => {
+                setErrorFlag(false)
+                setErrorMessage("")
+                setCategories(response.data)
+            }, (error) => {
+                setErrorFlag(true)
+                setErrorMessage(error.toString())
             })
     }
     const placeBid = () => {
@@ -145,6 +165,27 @@ const Auction = () => {
                 setAuction(response.data)
                 getRelatedAuctions(response.data.categoryId, response.data.sellerId)
                 getBids()
+                setNewCategory(response.data.categoryId)
+                setNewTitle(response.data.title)
+                setNewDescription(response.data.description)
+                setNewReserve(response.data.reserve)
+                let d = new Date(response.data.endDate)
+                setNewEnd(d.getFullYear() + '-0' + (d.getMonth() + 1) + '-' + d.getDate())
+                d = new Date()
+                setDefaultDate(d.getFullYear() + '-0' + (d.getMonth() + 1) + '-' + d.getDate())
+            }, (error) => {
+                setErrorFlag(true)
+                setErrorMessage(error.toString())
+            })
+    }
+    const patchAuction = () => {
+        axios.patch('http://localhost:4941/api/v1/auctions/' + id,
+            {"title": newTitle, "description": newDescription, "categoryId": newCategory, "endDate": newEnd, "reserve": newReserve},
+            {headers: {"X-Authorization": token}})
+            .then(async (response) => {
+                setErrorFlag(false)
+                setEditActive(false)
+                getAuction()
             }, (error) => {
                 setErrorFlag(true)
                 setErrorMessage(error.toString())
@@ -160,10 +201,10 @@ const Auction = () => {
                         {auctionReserve()}
                     </Grid>
                     <Grid item sm={4} style={{display: "flex", alignItems: "center", justifyContent: "right"}}>
-                        $&nbsp;<Input type="number" onChange={updateBidAmount} inputProps={{ min: auction.highestBid+1, inputMode: 'numeric', pattern: '[0-9]*' }} />
+                        $&nbsp;<Input type="number" disabled={userId === auction.sellerId} onChange={updateBidAmount} inputProps={{ min: auction.highestBid+1, inputMode: 'numeric', pattern: '[0-9]*' }} />
                     </Grid>
                     <Grid item sm={2} style={{display: "flex", alignItems: "center", justifyContent: "left"}}>
-                        <Button variant="contained" onClick={placeBid}>Place Bid</Button>
+                        <Button variant="contained" disabled={userId === auction.sellerId} onClick={placeBid}>Place Bid</Button>
                     </Grid>
                 </Grid>
             )
@@ -171,6 +212,11 @@ const Auction = () => {
     }
     const auctionReserve = () => {
         let text = <Typography variant="h6" style={styles.reserveNotMet}>Closed: Unsold</Typography>
+        if (editActive && ((new Date(auction.endDate)).getTime() > Date.now())) {
+            return (
+                    <TextField type={"number"} defaultValue={auction.reserve} label={"Reserve"} onChange={updateNewReserve}/>
+            )
+        }
         if (bids.length === 0) {
             if ((new Date(auction.endDate)).getTime() > Date.now()) {
                 text = <Typography align="center" variant="h6" style={styles.reserveNotMet}>No Bids</Typography>
@@ -321,12 +367,61 @@ const Auction = () => {
     };
     const openDeleteModal = () => setOpen(true);
     const closeDeleteModal = () => setOpen(false);
+    const startEditing = () => setEditActive(true);
+    const stopEditing = () => setEditActive(false);
+    const editButton = () => {
+        if (editActive) {
+            return (
+                <Grid item sm={5} style={{display: "flex", alignItems: "center", justifyContent: "right"}}>
+                <Button variant={'contained'} color='success' onClick={patchAuction}>Save Changes</Button>
+                &nbsp;
+                <Button variant={'contained'} onClick={stopEditing}>Cancel</Button>
+                </Grid>
+            )
+        } else {
+            return (
+                <Grid item sm={5} style={{display: "flex", alignItems: "center", justifyContent: "right"}}>
+                    <Button variant={'contained'} disabled={bids.length > 0} onClick={startEditing}>Edit Auction</Button>
+                    &nbsp;
+                    <Button variant={'contained'} onClick={openDeleteModal} color={'error'}>Delete Auction</Button>
+                </Grid>
+
+            )
+        }
+    }
+    const updateNewTitle = (event: { target?: any; }) => {
+        setNewTitle(event.target.value)
+    }
+    const updateNewCategory = (event: React.ChangeEvent<HTMLInputElement>) => {
+        setNewCategory(parseInt(event.target.value,10));
+    }
+    const updateNewDescription = (event: { target?: any; }) => {
+        setNewDescription(event.target.value)
+    }
+    const updateNewReserve = (event: { target?: any; }) => {
+        setNewReserve(event.target.value)
+    }
+    const updateNewEnd = (event: { target?: any; }) => {
+        console.log(event.target.value)
+        setNewEnd(event.target.value)
+    }
+    const editableTitle = () => {
+        if (editActive) {
+            return (
+                <TextField defaultValue={newTitle} onChange={updateNewTitle}/>
+            )
+        } else {
+            return (
+                <Typography variant={"h3"} align={'left'}>{auction.title}</Typography>
+            )
+        }
+    }
     const isOwner = () => {
         if (userId !== auction.sellerId) {
             return (
                 <Grid container spacing={1}>
                     <Grid item sm={7}>
-                        <Typography variant={"h3"} align={'left'}>{auction.title}</Typography>
+                        {editableTitle()}
                     </Grid>
                     <Grid item sm={4} style={{display: "flex", alignItems: "center", justifyContent: "right"}}>
                         <Typography variant={"h6"} align={'right'} alignSelf={"center"}>Seller: {auction.sellerFirstName} {auction.sellerLastName}</Typography>
@@ -340,20 +435,12 @@ const Auction = () => {
             return (
                 <Grid container spacing={1}>
                     <Grid item sm={7}>
-                        <Typography variant={"h3"} align={'left'}>{auction.title}</Typography>
+                        {editableTitle()}
                     </Grid>
-                    <Grid item sm={5} style={{display: "flex", alignItems: "center", justifyContent: "right"}}>
-                        <Button variant={'contained'}>Edit Auction</Button>
-                        &nbsp;
-                        <Button variant={'contained'} onClick={openDeleteModal} color={'error'}>Delete Auction</Button>
-                        <Modal
-                            open={open}
-                            onClose={closeDeleteModal}
-                            aria-labelledby="modal--title"
-                            aria-describedby="modal-description"
-                        >
+                    {editButton()}
+                        <Modal open={open} onClose={closeDeleteModal} aria-labelledby="modal--title" aria-describedby="modal-description">
                             <Box sx={modalStyling}>
-                                <Typography id="modal-title" variant="h6">Delete Auction?</Typography>
+                                <Typography id="modal-title"  variant="h6">Delete Auction?</Typography>
                                 <br></br>
                                     <Box style={{display: "flex", justifyContent: "center"}}>
                                 <Button variant={'contained'} onClick={closeDeleteModal}>Cancel</Button>
@@ -362,8 +449,52 @@ const Auction = () => {
                                     </Box>
                             </Box>
                         </Modal>
-                    </Grid>
+
                 </Grid>
+            )
+        }
+    }
+    const closingTime = () => {
+        if (editActive) {
+            return (
+                <Box>
+                Closing: {getTime(auction.endDate)}
+                <br></br><br></br>
+                    <Divider/>
+                    <br></br>
+                <input type={"date"} onChange={updateNewEnd} min={defaultDate}/>
+                    <br></br>
+                    <br></br>
+                    <TextField fullWidth select label={"Item Category"} value={newCategory} required onChange={updateNewCategory}>
+                        {categories.map(({ categoryId, name}) => (
+                            <MenuItem key={categoryId} style={{height: 25}} value={categoryId}>
+                                {name}
+                            </MenuItem>
+                        ))}
+                    </TextField>
+                </Box>
+            )
+        } else {
+            return (
+                <Box>
+                    Closing: {getTime(auction.endDate)}
+                </Box>
+            )
+        }
+    }
+    const editableDesc = () => {
+        if (editActive) {
+            return (
+                <Box>
+                    <br></br>
+                <TextField required multiline fullWidth id="inputDesc" label={"Description"} defaultValue={newDescription} onChange={updateNewDescription}/>
+                </Box>
+            )
+        } else {
+            return (
+                <Box>
+                {auction.description}
+                </Box>
             )
         }
     }
@@ -397,10 +528,9 @@ const Auction = () => {
                                     </Grid>
                                     <Grid item sm={5}>
                                         <Box sx={{overflow: 'auto'}}>
-                                        {auction.description}
+                                                {editableDesc()}
                                             <br></br>
-                                            <br></br>
-                                            Closing: {getTime(auction.endDate)}
+                                            {closingTime()}
                                         </Box>
                                     </Grid>
                                 </Grid>
