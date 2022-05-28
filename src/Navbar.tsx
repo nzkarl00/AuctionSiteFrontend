@@ -1,8 +1,10 @@
 import {
+    Alert,
+    AlertColor,
     AppBar, Avatar,
     Box, Button, Divider, Grid,
     IconButton, Input, InputAdornment, InputLabel,
-    Menu, MenuItem, TextField,
+    Menu, MenuItem, Snackbar, TextField,
     Toolbar,
     Typography
 } from "@mui/material";
@@ -25,6 +27,11 @@ const Navbar = (props: { pageName: any; loggedIn?: boolean}) => {
     const emailRegex = new RegExp('^[^\s@]+@([^\s@.,]+\.)+[^\s@.,]{1,}$')
     const [email, setEmail] = React.useState('')
     const [password, setPassword] = React.useState('')
+    const [errorFlag, setErrorFlag] = React.useState(false)
+    const [errorMessage, setErrorMessage] = React.useState("")
+    const [snackOpen, setSnackOpen] = React.useState(false)
+    const [snackMessage, setSnackMessage] = React.useState("")
+    const [snackSeverity, setSnackSeverity] = React.useState<AlertColor>("success")
     const updateEmailState = (event: { target?: any; }) => {
         setEmail(event.target.value)
     }
@@ -36,18 +43,30 @@ const Navbar = (props: { pageName: any; loggedIn?: boolean}) => {
             backgroundColor: "white"
         }
     }
+    const handleSnackClose = (event?: React.SyntheticEvent | Event,
+                              reason?: string) => {
+        if (reason === 'clickaway') {
+            return;
+        }
+        setSnackOpen(false);
+    };
     const signIn = () => {
-        console.log(email)
-        console.log(password)
         axios.post('http://localhost:4941/api/v1/users/login', {email: email, password: password})
             .then(async (response) => {
-                console.log(response)
                 setToken(response.data.token)
                 setUserId(response.data.userId)
-            })
+                setSnackSeverity("success")
+                setSnackOpen(true)
+                setSnackMessage("Logged in successfully")
+            }, (error) => {
+                setSnackSeverity("error")
+                setSnackOpen(true)
+                setSnackMessage("Invalid login")
+                setErrorFlag(true)
+                setErrorMessage(error.toString())
+    })
     }
     const getLoggedIn = () => {
-        console.log(token)
         if (token === '') {
             return (
                 <Grid container justifyContent="flex-end" spacing={1}>
@@ -70,7 +89,7 @@ const Navbar = (props: { pageName: any; loggedIn?: boolean}) => {
                 <Grid container justifyContent="flex-end" spacing={1}>
                 <IconButton id="accountButton" edge={"end"} onClick={openAccountMenu}><Avatar alt={"User Profile Photo"} src={"http://localhost:4941/api/v1/users/" + userId + "/image"}/></IconButton>
                 <Menu anchorEl={anchorElement} MenuListProps={{"aria-labelledby": "accountButton"}} open={open} onClose={closeAccountMenu}>
-                    <MenuItem><Link to={"/register"}>My Profile</Link></MenuItem>
+                    <MenuItem><Link to={"/users/" + userId}>My Profile</Link></MenuItem>
                     <MenuItem><Link to={"/register"}>My Auctions</Link></MenuItem>
                     <MenuItem onClick={deleteToken}>Sign Out</MenuItem>
                 </Menu>
@@ -92,10 +111,20 @@ const Navbar = (props: { pageName: any; loggedIn?: boolean}) => {
     <AppBar>
         <Toolbar>
             <MenuIcon sx={{mr:2}} />
-            <Typography variant={"h5"} sx={{mr:2}}>{props.pageName}</Typography>
+            <Typography width={"50%"} align="left" variant={"h5"} sx={{mr:2}}>{props.pageName}</Typography>
             {getLoggedIn()}
         </Toolbar>
     </AppBar>
+        <Snackbar
+            autoHideDuration={6000}
+            open={snackOpen}
+            onClose={handleSnackClose}
+            key={snackMessage}>
+            <Alert onClose={handleSnackClose} severity={snackSeverity} sx={{
+                width: '100%' }}>
+                {snackMessage}
+            </Alert>
+        </Snackbar>
 
     </Box>
     )

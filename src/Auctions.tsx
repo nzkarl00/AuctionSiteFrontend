@@ -3,7 +3,7 @@ import React, {Component, useEffect, useLayoutEffect} from 'react'
 import Select from 'react-select'
 import {
     Avatar,
-    Box,
+    Box, Button,
     Card, Checkbox, Chip,
     Container, Divider, FormControl, Grid, InputLabel,
     List, ListItem, ListItemAvatar,
@@ -246,7 +246,11 @@ const Auctions = () => {
                     </Container>
                     <Container sx={{ width: 1/5}}>
                     <List>
-                        <h2>dsadafds</h2>
+                        <Grid container spacing={1}>
+                            <Grid item sm={12}><Button fullWidth variant={"contained"} href={"/create-auction"}>Post New Auction</Button></Grid>
+                            <Grid item sm={12}><Button fullWidth variant={"contained"} href={"/create-auction"}>My Auctions</Button></Grid>
+                        </Grid>
+
                     </List>
                     </Container>
                 </div>

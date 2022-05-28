@@ -1,4 +1,4 @@
-import {Link, useParams} from "react-router-dom";
+import {Link, useNavigate, useParams} from "react-router-dom";
 import React, {useEffect} from "react";
 import axios from "axios";
 import Navbar from "./Navbar";
@@ -9,7 +9,7 @@ import {
     Container,
     Divider,
     Grid, ImageList, ImageListItem, ImageListItemBar, Input,
-    List,
+    List, Modal,
     Paper, Snackbar,
     Table, TableBody,
     TableCell,
@@ -33,6 +33,8 @@ const Auction = () => {
     const [snackMessage, setSnackMessage] = React.useState("")
     const [snackSeverity, setSnackSeverity] = React.useState<AlertColor>("success")
     const [relatedAuctions, setRelatedAuctions] = React.useState<Array<auction>>([])
+    const [open, setOpen] = React.useState(false);
+    const nav = useNavigate()
     const handleSnackClose = (event?: React.SyntheticEvent | Event,
                               reason?: string) => {
         if (reason === 'clickaway') {
@@ -48,15 +50,12 @@ const Auction = () => {
         setBidAmount(event.target.value);
     }
     const getRelatedAuctions = (catId: number, sellerId: number) => {
-
         let items = new Array<auction>()
         axios.get('http://localhost:4941/api/v1/auctions', {params: {categoryIds: catId}})
             .then((response) => {
                 axios.get('http://localhost:4941/api/v1/auctions', {params: {sellerId: sellerId}})
                     .then((response2) => {
                         if (typeof id === "string") {
-                            console.log(catId, sellerId)
-                            console.log(Array.from(new Set(response.data.auctions.concat(response2.data.auctions).filter((auc: { auctionId: number; }) => auc.auctionId !== parseInt(id, 10)))))
                             setRelatedAuctions(Array.from(new Set(response.data.auctions.concat(response2.data.auctions).filter((auc: { auctionId: number; }) => auc.auctionId !== parseInt(id, 10)))))
                         }
                     })
@@ -71,7 +70,6 @@ const Auction = () => {
         axios.post('http://localhost:4941/api/v1/auctions/' + id + '/bids', {"amount": parseInt(String(bidAmount), 10)}, {headers: {"X-Authorization": token}})
             .then((response) => {
                 getBids()
-                console.log((new Date).toLocaleDateString() + ' ' + (new Date).toLocaleTimeString())
                 setSnackSeverity("success")
                 setSnackMessage("Bid Placed successfully")
                 setSnackOpen(true)
@@ -79,6 +77,29 @@ const Auction = () => {
                 setErrorFlag(true)
                 setErrorMessage(error.toString())
             })
+    }
+    const deleteAuction = () => {
+        if (token === '' || userId !== auction.sellerId) {
+            setSnackSeverity("error")
+            setSnackOpen(true)
+            setSnackMessage("Authentication Error")
+        } else if (bids.length > 0) {
+            setSnackSeverity("error")
+            setSnackOpen(true)
+            setSnackMessage("Cannot delete an auction with bids")
+        } else {
+            axios.delete('http://localhost:4941/api/v1/auctions/' + id, {headers: {"X-Authorization": token}})
+                .then((response) => {
+                    getBids()
+                    setSnackSeverity("success")
+                    setSnackMessage("Auction deleted successfully")
+                    setSnackOpen(true)
+                    nav('/auctions')
+                }, (error) => {
+                    setErrorFlag(true)
+                    setErrorMessage(error.toString())
+                })
+        }
     }
     const styles = {
         auctionPhoto: {
@@ -267,7 +288,10 @@ const Auction = () => {
                     <ImageListItem key={related.auctionId} sx={{}}>
                         <img
                             src={'http://localhost:4941/api/v1/auctions/' + related.auctionId + '/image'}
-                            srcSet={'http://localhost:4941/api/v1/auctions/' + related.auctionId + '/image'}
+                            onError={({ currentTarget }) => {
+                                currentTarget.onerror = null; // prevents looping
+                                currentTarget.src="https://upload.wikimedia.org/wikipedia/commons/b/b1/Missing-image-232x150.png";
+                            }}
                             alt={related.title}/>
                         <ImageListItemBar
                             title={related.title}
@@ -282,6 +306,66 @@ const Auction = () => {
             </ImageList>
             </Paper>
         );
+    }
+    const modalStyling = {
+        position: 'absolute' as 'absolute',
+        top: '50%',
+        left: '50%',
+        transform: 'translate(-50%, -50%)',
+        width: 250,
+        bgcolor: 'background.paper',
+        border: '2px solid #000',
+        boxShadow: 24,
+        p: 4,
+        textAlign: "center",
+    };
+    const openDeleteModal = () => setOpen(true);
+    const closeDeleteModal = () => setOpen(false);
+    const isOwner = () => {
+        if (userId !== auction.sellerId) {
+            return (
+                <Grid container spacing={1}>
+                    <Grid item sm={7}>
+                        <Typography variant={"h3"} align={'left'}>{auction.title}</Typography>
+                    </Grid>
+                    <Grid item sm={4} style={{display: "flex", alignItems: "center", justifyContent: "right"}}>
+                        <Typography variant={"h6"} align={'right'} alignSelf={"center"}>Seller: {auction.sellerFirstName} {auction.sellerLastName}</Typography>
+                    </Grid>
+                    <Grid item sm={1} style={{display: "flex", alignItems: "center", justifyContent: "left"}}>
+                        <Avatar sx={{height: 35, width: 35}} alt={auction.sellerFirstName + " " + auction.sellerLastName} src={"http://localhost:4941/api/v1/users/" + auction.sellerId + "/image"}/>
+                    </Grid>
+                </Grid>
+            )
+        } else {
+            return (
+                <Grid container spacing={1}>
+                    <Grid item sm={7}>
+                        <Typography variant={"h3"} align={'left'}>{auction.title}</Typography>
+                    </Grid>
+                    <Grid item sm={5} style={{display: "flex", alignItems: "center", justifyContent: "right"}}>
+                        <Button variant={'contained'}>Edit Auction</Button>
+                        &nbsp;
+                        <Button variant={'contained'} onClick={openDeleteModal} color={'error'}>Delete Auction</Button>
+                        <Modal
+                            open={open}
+                            onClose={closeDeleteModal}
+                            aria-labelledby="modal--title"
+                            aria-describedby="modal-description"
+                        >
+                            <Box sx={modalStyling}>
+                                <Typography id="modal-title" variant="h6">Delete Auction?</Typography>
+                                <br></br>
+                                    <Box style={{display: "flex", justifyContent: "center"}}>
+                                <Button variant={'contained'} onClick={closeDeleteModal}>Cancel</Button>
+                                &nbsp;
+                                <Button variant={'contained'} color={'error'} onClick={deleteAuction}>Delete</Button>
+                                    </Box>
+                            </Box>
+                        </Modal>
+                    </Grid>
+                </Grid>
+            )
+        }
     }
     return (
         <div>
@@ -298,17 +382,7 @@ const Auction = () => {
                     <Container>
                         <List sx={{textAlign: "left"}}>
                             <Paper sx={{paddingX: 2, paddingY: 0.1}}>
-                                <Grid container spacing={1}>
-                                    <Grid item sm={7}>
-                                <Typography variant={"h3"} align={'left'}>{auction.title}</Typography>
-                                    </Grid>
-                                    <Grid item sm={4} style={{display: "flex", alignItems: "center", justifyContent: "right"}}>
-                                <Typography variant={"h6"} align={'right'} alignSelf={"center"}>Seller: {auction.sellerFirstName} {auction.sellerLastName}</Typography>
-                                    </Grid>
-                                    <Grid item sm={1} style={{display: "flex", alignItems: "center", justifyContent: "left"}}>
-                                    <Avatar sx={{height: 35, width: 35}} alt={auction.sellerFirstName + " " + auction.sellerLastName} src={"http://localhost:4941/api/v1/users/" + auction.sellerId + "/image"}/>
-                                    </Grid>
-                                </Grid>
+                                {isOwner()}
                                 <Divider />
                                 <br></br>
 
