@@ -2,10 +2,10 @@ import Navbar from "./Navbar";
 import React from "react";
 import {
     Avatar,
-    Box,
+    Box, Button,
     Container,
     Divider,
-    Grid, List,
+    Grid, IconButton, List,
     ListItemButton,
     ListItemText,
     Paper,
@@ -17,6 +17,7 @@ import {
 import axios from "axios";
 import {useUserStore} from "./store";
 import {inspect} from "util";
+import EditIcon from "@mui/icons-material/Edit";
 
 const MyAuctions = () => {
     // @ts-ignore
@@ -187,12 +188,23 @@ const MyAuctions = () => {
     }
     return (
         <div>
-            <h1>My Auctions</h1>
+        <br></br>
+        <br></br>
+        <br></br>
+        <br></br>
+        <div style={{display: 'flex'}}>
             <Navbar pageName={"My Auctions"}/>
-            <Container maxWidth="md">
+            <Container sx={{ width: 1/5}}>
+            </Container>
+            <Container>
                 <Paper elevation={4}>
                     <br></br>
-                    <Typography align={"center"} variant={"h4"}>My Auctions</Typography>
+                    <Grid container>
+                        <Grid item sm={3}></Grid>
+                        <Grid item sm={6}><Typography align={"center"} variant={"h4"}>My Auctions</Typography></Grid>
+                        <Grid item sm={3} style={{justifyContent: "center"}}><Button variant={"contained"} href={"/create-auction"}>Post New Auction</Button></Grid>
+                    </Grid>
+
                     <br></br>
                     <Divider />
                     <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
@@ -213,6 +225,9 @@ const MyAuctions = () => {
                     </TabPanel>
                 </Paper>
             </Container>
+            <Container sx={{ width: 1/5}}>
+            </Container>
+        </div>
         </div>
     )
 }

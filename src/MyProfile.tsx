@@ -67,61 +67,21 @@ const MyProfile = () => {
                 setErrorMessage(error.toString())
             })
     }
-    const putFirst = () => {
-        axios.patch('http://localhost:4941/api/v1/users/' + userId, {"firstName": firstName}, {headers: {"X-Authorization": token}})
-            .then((response) => {
-                console.log(response)
-            }, (error) => {
-                setErrorFlag(true)
-                console.log('meme' + error)
-                setErrorMessage(error.toString())
-            })
-    }
-    const putLast = () => {
-        axios.patch('http://localhost:4941/api/v1/users/' + userId, {"lastName": lastName}, {headers: {"X-Authorization": token}})
-            .then((response) => {
-                console.log(response)
-            }, (error) => {
-                setErrorFlag(true)
-                console.log('meme' + error)
-                setErrorMessage(error.toString())
-            })
-    }
-    const putEmail = () => {
-        axios.patch('http://localhost:4941/api/v1/users/' + userId, {"email": email}, {headers: {"X-Authorization": token}})
-            .then((response) => {
-                console.log(response)
-            }, (error) => {
-                setErrorFlag(true)
-                console.log('meme' + error)
-                setErrorMessage(error.toString())
-            })
-    }
-    const putPass = () => {
-        axios.patch('http://localhost:4941/api/v1/users/' + userId, {"password": password, "currentPassword": currentPassword},
-            {headers: {"X-Authorization": token}})
-            .then((response) => {
-                console.log(response)
-            }, (error) => {
-                setErrorFlag(true)
-                console.log('meme' + error)
-                setErrorMessage(error.toString())
-            })
-    }
     const editUser = async () => {
         setErrorFlag(false)
+        let data: userPatch = {}
         if (profilePhoto) {
             await putPhoto()
         }
         if (firstName !== '') {
-            await putFirst()
+            data.firstName = firstName
         }
         if (lastName !== '') {
-            await putLast()
+            data.lastName = lastName
         }
         if (email !== '') {
             if (emailRegex.test(email)) {
-                await putEmail()
+                data.email = email
             } else {
                 setSnackSeverity("error")
                 setSnackOpen(true)
@@ -136,15 +96,32 @@ const MyProfile = () => {
                 setErrorFlag(true)
                 setSnackMessage("Password must be 6 characters in length")
             } else {
-                await putPass()
+                data.password = password
+                data.currentPassword = currentPassword
             }
         }
+        console.log(data)
         if (!errorFlag) {
-            setSnackSeverity("success")
+            axios.patch('http://localhost:4941/api/v1/users/' + userId, data,
+                {headers: {"X-Authorization": token}})
+                .then((response) => {
+                    console.log(response)
+                    setSnackSeverity("success")
+                    setSnackOpen(true)
+                    setSnackMessage("Profile updated successfully")
+                }, (error) => {
+                    setErrorFlag(true)
+                    console.log('meme' + error)
+                    setErrorMessage(error.toString())
+                    setSnackSeverity("error")
+                    setSnackOpen(true)
+                    setSnackMessage("Something went wrong")
+                })
+        } else {
+            setSnackSeverity("error")
             setSnackOpen(true)
-            setSnackMessage("Profile updated successfully")
+            setSnackMessage("Something went wrong")
         }
-
     }
     const updateFirstNameState  = (event: { target?: any; }) => {
         setFirstName(event.target.value);

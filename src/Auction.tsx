@@ -18,6 +18,7 @@ import {
 } from "@mui/material";
 import auctions from "./Auctions";
 import {useUserStore} from "./store";
+import AddAPhotoIcon from '@mui/icons-material/AddAPhoto';
 
 const Auction = () => {
     const {id} = useParams<string>();
@@ -33,6 +34,8 @@ const Auction = () => {
     const [snackMessage, setSnackMessage] = React.useState("")
     const [snackSeverity, setSnackSeverity] = React.useState<AlertColor>("success")
     const [relatedAuctions, setRelatedAuctions] = React.useState<Array<auction>>([])
+    const [auctionPhoto, setAuctionPhoto] = React.useState<File>()
+    const [auctionPhotoPreview, setAuctionPhotoPreview] = React.useState<string>('http://localhost:4941/api/v1/auctions/' + id + '/image')
     const [open, setOpen] = React.useState(false)
     const [editActive, setEditActive] = React.useState(false)
     const [newTitle, setNewTitle] = React.useState<string>(auction.title)
@@ -92,6 +95,7 @@ const Auction = () => {
                 setSnackSeverity("success")
                 setSnackMessage("Bid Placed successfully")
                 setSnackOpen(true)
+                getAuction()
             }, (error) => {
                 setErrorFlag(true)
                 setErrorMessage(error.toString())
@@ -178,6 +182,15 @@ const Auction = () => {
             })
     }
     const patchAuction = () => {
+        if (auctionPhoto) {
+            axios.put('http://localhost:4941/api/v1/auctions/' + id + '/image', auctionPhoto,
+                {headers: {"X-Authorization": token, "content-type": auctionPhoto?.type ?? 'image/jpeg'}})
+                .then((response) => {
+                }, (error) => {
+                    setErrorFlag(true)
+                    setErrorMessage(error.toString())
+                })
+        }
         axios.patch('http://localhost:4941/api/v1/auctions/' + id,
             {"title": newTitle, "description": newDescription, "categoryId": newCategory, "endDate": newEnd, "reserve": newReserve},
             {headers: {"X-Authorization": token}})
@@ -382,7 +395,7 @@ const Auction = () => {
                 <Grid item sm={5} style={{display: "flex", alignItems: "center", justifyContent: "right"}}>
                     <Button variant={'contained'} disabled={bids.length > 0} onClick={startEditing}>Edit Auction</Button>
                     &nbsp;
-                    <Button variant={'contained'} onClick={openDeleteModal} color={'error'}>Delete Auction</Button>
+                    <Button variant={'contained'} disabled={bids.length > 0} onClick={openDeleteModal} color={'error'}>Delete Auction</Button>
                 </Grid>
 
             )
@@ -497,6 +510,39 @@ const Auction = () => {
             )
         }
     }
+    const updateAuctionPhoto = (event: {target?: any;}) => {
+        setAuctionPhoto(event.target.files[0])
+        setAuctionPhotoPreview(URL.createObjectURL(event.target.files[0]))
+    }
+    const displayAuctionPhoto = () => {
+        if (editActive) {
+            return (
+                <Grid item sm={7} style={styles.auctionPhoto}>
+                    <img alt={auction.title + ' auction image'} style={{opacity: 0.5}}
+                         src={auctionPhotoPreview}
+                         onError={({currentTarget}) => {
+                             currentTarget.onerror = null; // prevents looping
+                             currentTarget.src = "https://upload.wikimedia.org/wikipedia/commons/b/b1/Missing-image-232x150.png";
+                         }} height={400}/>
+                    <Button variant="contained" component="label" style={{position: "absolute"}}>
+                        <AddAPhotoIcon/>
+                        <Input type="file" id="photoUpload" inputProps={{ accept: 'image' }} style={{display: "none", position: "absolute"}} onChange={updateAuctionPhoto}/>
+                    </Button>
+                </Grid>
+            )
+        } else {
+            return (
+                <Grid item sm={7} style={styles.auctionPhoto}>
+                    <img alt={auction.title + ' auction image'}
+                         src={'http://localhost:4941/api/v1/auctions/' + auction.auctionId + '/image'}
+                         onError={({currentTarget}) => {
+                             currentTarget.onerror = null; // prevents looping
+                             currentTarget.src = "https://upload.wikimedia.org/wikipedia/commons/b/b1/Missing-image-232x150.png";
+                         }} height={400}/>
+                </Grid>
+            )
+        }
+    }
     return (
         <div>
             <br></br>
@@ -515,16 +561,9 @@ const Auction = () => {
                                 {isOwner()}
                                 <Divider />
                                 <br></br>
-
                             <div>
                                 <Grid container spacing={1}>
-                                    <Grid item sm={7} style={styles.auctionPhoto}>
-                            <img alt={auction.title + ' auction image'} src={'http://localhost:4941/api/v1/auctions/' + auction.auctionId + '/image'}
-                                 onError={({ currentTarget }) => {
-                                     currentTarget.onerror = null; // prevents looping
-                                     currentTarget.src="https://upload.wikimedia.org/wikipedia/commons/b/b1/Missing-image-232x150.png";
-                                 }} height={400} />
-                                    </Grid>
+                                    {displayAuctionPhoto()}
                                     <Grid item sm={5}>
                                         <Box sx={{overflow: 'auto'}}>
                                                 {editableDesc()}

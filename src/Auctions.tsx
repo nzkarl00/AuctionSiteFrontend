@@ -8,9 +8,10 @@ import {
     Container, Divider, FormControl, Grid, InputLabel,
     List, ListItem, ListItemAvatar,
     ListItemButton, ListItemText, MenuItem, OutlinedInput, Paper, SelectChangeEvent,
-    Stack, TextField
+    Stack, TablePagination, TextField
 } from "@mui/material";
 import Navbar from "./Navbar";
+import {spacing} from "react-select/dist/declarations/src/theme";
 
 const Auctions = () => {
     const [auctions, setAuctions] = React.useState<Array<auction>>([])
@@ -21,6 +22,9 @@ const Auctions = () => {
     const [search, setSearch] = React.useState('')
     const [status, setStatus] = React.useState('OPEN')
     const [sort, setSort] = React.useState('CLOSING_SOON')
+    const [displayedAuctions, setDisplayedAuctions] = React.useState<Array<auction>>([])
+    const [page, setPage] = React.useState(0);
+    const [rowsPerPage, setRowsPerPage] = React.useState(10);
     const millisInDay = 86400000;
     const [catSelect, setCatSelect] = React.useState<Array<{ value: string; label: string; }[]>>([])
     React.useEffect(() => {
@@ -48,6 +52,7 @@ const Auctions = () => {
         axios.get('http://localhost:4941/api/v1/auctions', {params: {q: search, status: status, categoryIds: selectedCategories, sortBy: sort}})
             .then((response) => {
                 setAuctions(response.data.auctions)
+                setDisplayedAuctions(response.data.auctions.slice(page*rowsPerPage, (page+1)*rowsPerPage))
             })
     }
     const getAuctions = () => {
@@ -56,6 +61,7 @@ const Auctions = () => {
                 setErrorFlag(false)
                 setErrorMessage("")
                 setAuctions(response.data.auctions)
+                setDisplayedAuctions(response.data.auctions.slice(0, 10))
             }, (error) => {
                 setErrorFlag(true)
                 setErrorMessage(error.toString())
@@ -135,9 +141,16 @@ const Auctions = () => {
             return <p>Closing in {Math.floor(delta/millisInDay)} days</p>
         }
     }
+    const handleChangePage = (event: React.MouseEvent<HTMLButtonElement> | null, newPage: number) => {
+        setPage(newPage);
+    };
 
+    const handleChangeRowsPerPage = (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+        setRowsPerPage(parseInt(event.target.value, 10));
+        setPage(0);
+    };
     const auctionList = () => {
-        return auctions.map(a =>
+        return displayedAuctions.map(a =>
                 <Paper elevation={3}>
                     <ListItemButton key={a.auctionId} component="a"
                               href={'/auctions/' + a.auctionId} style={styles.auctionItem}>
@@ -211,6 +224,16 @@ const Auctions = () => {
                 />
                 <br></br>
             </FormControl>
+            <TablePagination
+                align={'left'}
+                size={"small"}
+                component="span"
+                count={auctions.length}
+                page={page}
+                onPageChange={handleChangePage}
+                rowsPerPage={rowsPerPage}
+                onRowsPerPageChange={handleChangeRowsPerPage}
+            />
         </Paper>
         )
     }
@@ -234,24 +257,24 @@ const Auctions = () => {
                 <br></br>
                 <div style={{display: 'flex'}}>
                     <Navbar pageName={"Auctions"} />
-                    <Container sx={{ width: 1/5}}>
+                    <Container sx={{ width: 1/4.5, position: "fixed"}}>
                         <List>
                         {filter()}
                         </List>
+                        <List>
+                            <Grid container spacing={1}>
+                                <Grid item sm={12}><Button fullWidth variant={"contained"} href={"/create-auction"}>Post New Auction</Button></Grid>
+                                <Grid item sm={12}><Button fullWidth variant={"contained"} href={"/my-auctions"}>My Auctions</Button></Grid>
+                            </Grid>
+
+                        </List>
                     </Container>
-                    <Container>
+                    <Container sx={{ width: "100%"}}>
                     <List>
                         {auctionList()}
                     </List>
                     </Container>
-                    <Container sx={{ width: 1/5}}>
-                    <List>
-                        <Grid container spacing={1}>
-                            <Grid item sm={12}><Button fullWidth variant={"contained"} href={"/create-auction"}>Post New Auction</Button></Grid>
-                            <Grid item sm={12}><Button fullWidth variant={"contained"} href={"/create-auction"}>My Auctions</Button></Grid>
-                        </Grid>
-
-                    </List>
+                    <Container sx={{ width: 1/6}}>
                     </Container>
                 </div>
             </div>

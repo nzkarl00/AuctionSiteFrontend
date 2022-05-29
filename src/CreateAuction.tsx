@@ -86,6 +86,12 @@ const CreateAuction = () => {
                 setSnackOpen(true)
                 console.log(response.data)
                 setSnackMessage("Auction created successfully")
+                axios.put('http://localhost:4941/api/v1/auctions/' + response.data.auctionId + '/image', auctionPhoto, {headers: {"X-Authorization": token, "content-type": auctionPhoto?.type ?? 'image/jpeg'}})
+                    .then((response) => {
+                    }, (error) => {
+                        setErrorFlag(true)
+                        setErrorMessage(error.toString())
+                    })
                 nav('/auctions/' + response.data.auctionId)
             }, (error) => {
                 setErrorFlag(true)

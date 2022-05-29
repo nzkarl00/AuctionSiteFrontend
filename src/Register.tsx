@@ -46,12 +46,14 @@ const Register = () => {
     const nav = useNavigate();
     const styles = {
         photoPreview: {
-            height: 200,
-            width: 200,
+            height: 400,
+            width: 400,
             overflow: 'hidden',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
+            border: '1px solid black',
+            backgroundColor: 'lightgray'
         }
     }
     const updateFirstNameState  = (event: { target?: any; }) => {
@@ -183,9 +185,13 @@ const Register = () => {
                     <TextField required margin={"dense"} type="password" fullWidth id="confirmPassword" label="Confirm Password" error={confirmPassword.length > 0 && passwordMatchString !== ''} onChange={updateConfirmPasswordState}/>
                         <h6 style={{color: 'red'}}>{passwordMatchString}</h6>
                         <Grid container justifyContent="center">
-                        <Grid item style={styles.photoPreview}>
-                        <img src={profilePhotoPreview}/>
-                        </Grid>
+                            <Grid item style={styles.photoPreview}>
+                                <img alt={'Your profile photo'} src={profilePhotoPreview}
+                                     onError={({ currentTarget }) => {
+                                         currentTarget.onerror = null; // prevents looping
+                                         currentTarget.src="https://upload.wikimedia.org/wikipedia/commons/b/b1/Missing-image-232x150.png";
+                                     }} height={400} />
+                            </Grid>
                         </Grid>
                     <Button fullWidth variant="contained" component="label">
                         Upload Profile Photo

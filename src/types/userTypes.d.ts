@@ -32,11 +32,11 @@ type userReturn = {
 }
 
 type userPatch = {
-    firstName: string,
-    lastName: string,
-    email: string,
-    password: string,
-    currentPassword: string
+    firstName?: string,
+    lastName?: string,
+    email?: string,
+    password?: string,
+    currentPassword?: string
 }
 
 type userPersist = {
