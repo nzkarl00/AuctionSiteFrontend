@@ -59,7 +59,6 @@ const Auction = () => {
         setBidAmount(event.target.value);
     }
     const getRelatedAuctions = (catId: number, sellerId: number) => {
-        let items = new Array<auction>()
         axios.get('http://localhost:4941/api/v1/auctions', {params: {categoryIds: catId}})
             .then((response) => {
                 axios.get('http://localhost:4941/api/v1/auctions', {params: {sellerId: sellerId}})

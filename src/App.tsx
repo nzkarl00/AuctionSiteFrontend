@@ -9,6 +9,7 @@ import Auction from "./Auction";
 import NotFound from "./NotFound";
 import MyProfile from "./MyProfile";
 import CreateAuction from "./CreateAuction";
+import MyAuctions from "./MyAuctions";
 
 function App() {
   return (
@@ -16,6 +17,7 @@ function App() {
         <Router>
           <div>
             <Routes>
+              <Route path="/my-auctions" element={<MyAuctions/>}/>
               <Route path="/auctions" element={<Auctions/>}/>
               <Route path="/create-auction" element={<CreateAuction/>}/>
               <Route path="/register" element={<Register/>}/>

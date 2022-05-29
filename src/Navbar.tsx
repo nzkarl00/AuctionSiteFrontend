@@ -90,7 +90,7 @@ const Navbar = (props: { pageName: any; loggedIn?: boolean}) => {
                 <IconButton id="accountButton" edge={"end"} onClick={openAccountMenu}><Avatar alt={"User Profile Photo"} src={"http://localhost:4941/api/v1/users/" + userId + "/image"}/></IconButton>
                 <Menu anchorEl={anchorElement} MenuListProps={{"aria-labelledby": "accountButton"}} open={open} onClose={closeAccountMenu}>
                     <MenuItem><Link to={"/users/" + userId}>My Profile</Link></MenuItem>
-                    <MenuItem><Link to={"/register"}>My Auctions</Link></MenuItem>
+                    <MenuItem><Link to={"/my-auctions"}>My Auctions</Link></MenuItem>
                     <MenuItem onClick={deleteToken}>Sign Out</MenuItem>
                 </Menu>
                 </Grid>
