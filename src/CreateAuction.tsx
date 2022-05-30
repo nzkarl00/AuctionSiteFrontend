@@ -37,9 +37,6 @@ const CreateAuction = () => {
     const nav = useNavigate()
     React.useEffect(() => {
         getCategories()
-        if (token === '' || userId === 0) {
-            nav('/access-denied')
-        }
     }, [])
     const handleSnackClose = (event?: React.SyntheticEvent | Event,
                               reason?: string) => {
@@ -137,43 +134,51 @@ const CreateAuction = () => {
             backgroundColor: 'lightgray'
         }
     }
-    return (
-        <div>
-            <h1>My Details</h1>
-            <Navbar pageName={"Create Auction"}/>
+    if (token === '' || userId === 0) {
+        return <h1>Access Denied</h1>
+    } else {
+        return (
+            <div>
+                <h1>My Details</h1>
+                <Navbar pageName={"Create Auction"}/>
                 <Container maxWidth="md">
                     <Paper elevation={4}>
                         <Typography align={"center"} variant={"h4"}>Create Auction</Typography>
                         <br></br>
-                        <Divider />
+                        <Divider/>
                         <br></br>
                         <FormControl size={'medium'}>
                             <Stack direction="column" spacing={2}>
                                 <TextField required fullWidth id="inputTitle" label={"Title"} onChange={updateTitle}/>
-                                <TextField select label={"Item Category"} value={category} required onChange={updateCategory}>
-                                    {categories.map(({ categoryId, name}) => (
+                                <TextField select label={"Item Category"} value={category} required
+                                           onChange={updateCategory}>
+                                    {categories.map(({categoryId, name}) => (
                                         <MenuItem key={categoryId} style={{height: 25}} value={categoryId}>
                                             {name}
                                         </MenuItem>
-                                        ))}
+                                    ))}
                                 </TextField>
-                                <TextField required multiline fullWidth id="inputDesc" label={"Description"} onChange={updateDescription}/>
+                                <TextField required multiline fullWidth id="inputDesc" label={"Description"}
+                                           onChange={updateDescription}/>
                                 <Stack direction="row" spacing={1} justifyContent={"right"}>
-                                    <TextField type={"number"} InputProps={{ inputProps: { min: 1} }} label={"Reserve"} onChange={updateReserve}/>
-                                    <TextField required fullWidth type={"date"} label={"End Date"} onChange={updateEnd} InputLabelProps={{shrink: true}}/>
+                                    <TextField type={"number"} InputProps={{inputProps: {min: 1}}} label={"Reserve"}
+                                               onChange={updateReserve}/>
+                                    <TextField required fullWidth type={"date"} label={"End Date"} onChange={updateEnd}
+                                               InputLabelProps={{shrink: true}}/>
                                 </Stack>
                                 <Grid container justifyContent="center">
                                     <Grid item style={styles.photoPreview}>
                                         <img alt={'Auction photo'} src={auctionPhotoPreview}
-                                             onError={({ currentTarget }) => {
+                                             onError={({currentTarget}) => {
                                                  currentTarget.onerror = null; // prevents looping
-                                                 currentTarget.src="https://upload.wikimedia.org/wikipedia/commons/b/b1/Missing-image-232x150.png";
-                                             }} height={400} />
+                                                 currentTarget.src = "https://upload.wikimedia.org/wikipedia/commons/b/b1/Missing-image-232x150.png";
+                                             }} height={400}/>
                                     </Grid>
                                 </Grid>
                                 <Button fullWidth variant="contained" component="label">
                                     Upload Auction Photo
-                                    <Input type="file" id="photoUpload" inputProps={{ accept: 'image' }} style={{display: "none"}} onChange={updateAuctionPhoto}/>
+                                    <Input type="file" id="photoUpload" inputProps={{accept: 'image'}}
+                                           style={{display: "none"}} onChange={updateAuctionPhoto}/>
                                 </Button>
 
                                 <Stack direction="row" spacing={1} justifyContent={"right"}>
@@ -185,17 +190,19 @@ const CreateAuction = () => {
                         </FormControl>
                     </Paper>
                 </Container>
-            <Snackbar
-                autoHideDuration={6000}
-                open={snackOpen}
-                onClose={handleSnackClose}
-                key={snackMessage}>
-                <Alert onClose={handleSnackClose} severity={snackSeverity} sx={{
-                    width: '100%' }}>
-                    {snackMessage}
-                </Alert>
-            </Snackbar>
-        </div>
-    )
+                <Snackbar
+                    autoHideDuration={6000}
+                    open={snackOpen}
+                    onClose={handleSnackClose}
+                    key={snackMessage}>
+                    <Alert onClose={handleSnackClose} severity={snackSeverity} sx={{
+                        width: '100%'
+                    }}>
+                        {snackMessage}
+                    </Alert>
+                </Snackbar>
+            </div>
+        )
+    }
 }
 export default CreateAuction

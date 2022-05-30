@@ -35,9 +35,6 @@ const MyAuctions = () => {
     interface TabPanelProps {children?: React.ReactNode; index: number; value: number;}
     React.useEffect(() => {
         getSelling()
-        if (token === '' || userId === 0) {
-            nav('/access-denied')
-        }
     }, [])
     const getSelling = () => {
         axios.get('http://localhost:4941/api/v1/auctions')
@@ -192,49 +189,56 @@ const MyAuctions = () => {
             </Paper>
         )
     }
-    return (
-        <div>
-        <br></br>
-        <br></br>
-        <br></br>
-        <br></br>
-        <div style={{display: 'flex'}}>
-            <Navbar pageName={"My Auctions"}/>
-            <Container sx={{ width: 1/5}}>
-            </Container>
-            <Container>
-                <Paper elevation={4}>
-                    <br></br>
-                    <Grid container>
-                        <Grid item sm={3}></Grid>
-                        <Grid item sm={6}><Typography align={"center"} variant={"h4"}>My Auctions</Typography></Grid>
-                        <Grid item sm={3} style={{justifyContent: "center"}}><Button variant={"contained"} href={"/create-auction"}>Post New Auction</Button></Grid>
-                    </Grid>
+    if (token === '' || userId === 0) {
+        return(<h1>Access Denied</h1>)
+    } else {
+        return (
+            <div>
+                <br></br>
+                <br></br>
+                <br></br>
+                <br></br>
+                <div style={{display: 'flex'}}>
+                    <Navbar pageName={"My Auctions"}/>
+                    <Container sx={{width: 1 / 5}}>
+                    </Container>
+                    <Container>
+                        <Paper elevation={4}>
+                            <br></br>
+                            <Grid container>
+                                <Grid item sm={3}></Grid>
+                                <Grid item sm={6}><Typography align={"center"} variant={"h4"}>My
+                                    Auctions</Typography></Grid>
+                                <Grid item sm={3} style={{justifyContent: "center"}}><Button variant={"contained"}
+                                                                                             href={"/create-auction"}>Post
+                                    New Auction</Button></Grid>
+                            </Grid>
 
-                    <br></br>
-                    <Divider />
-                    <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
-                        <Tabs onChange={changeTab} value={tab} aria-label="myAuctionsTab">
-                            <Tab style={{width: "25%"}} label="All"/>
-                            <Tab style={{width: "25%"}} label="Buying"/>
-                            <Tab style={{width: "25%"}} label="Selling"/>
-                        </Tabs>
-                    </Box>
-                    <TabPanel value={tab} index={0}>
-                        <List>{auctionList(buyingAuctions.concat(sellingAuctions))}</List>
-                    </TabPanel>
-                    <TabPanel value={tab} index={1}>
-                        <List>{auctionList(buyingAuctions)}</List>
-                    </TabPanel>
-                    <TabPanel value={tab} index={2}>
-                        <List>{auctionList(sellingAuctions)}</List>
-                    </TabPanel>
-                </Paper>
-            </Container>
-            <Container sx={{ width: 1/5}}>
-            </Container>
-        </div>
-        </div>
-    )
+                            <br></br>
+                            <Divider/>
+                            <Box sx={{borderBottom: 1, borderColor: 'divider'}}>
+                                <Tabs onChange={changeTab} value={tab} aria-label="myAuctionsTab">
+                                    <Tab style={{width: "25%"}} label="All"/>
+                                    <Tab style={{width: "25%"}} label="Buying"/>
+                                    <Tab style={{width: "25%"}} label="Selling"/>
+                                </Tabs>
+                            </Box>
+                            <TabPanel value={tab} index={0}>
+                                <List>{auctionList(buyingAuctions.concat(sellingAuctions))}</List>
+                            </TabPanel>
+                            <TabPanel value={tab} index={1}>
+                                <List>{auctionList(buyingAuctions)}</List>
+                            </TabPanel>
+                            <TabPanel value={tab} index={2}>
+                                <List>{auctionList(sellingAuctions)}</List>
+                            </TabPanel>
+                        </Paper>
+                    </Container>
+                    <Container sx={{width: 1 / 5}}>
+                    </Container>
+                </div>
+            </div>
+        )
+    }
 }
 export default MyAuctions

@@ -42,9 +42,6 @@ const MyProfile = () => {
     const nav = useNavigate()
     React.useEffect(() => {
         getUser()
-        if (token === '' || userId === 0) {
-            nav('/access-denied')
-        }
     }, [userId])
     const handleSnackClose = (event?: React.SyntheticEvent | Event,
                               reason?: string) => {
@@ -168,65 +165,89 @@ const MyProfile = () => {
             backgroundColor: 'lightgray'
         }
     }
-    return (
-        <div>
-            <h1>My Details</h1>
-            <Navbar pageName={"My Details"}/>
+    if (token === '') {
+        return (<h1>Access Denied</h1>)
+    } else {
+        return (
             <div>
-                <Container maxWidth="sm">
-                    <Paper elevation={4}>
-                        <Grid container>
-                            <Grid item sm={1}></Grid>
-                            <Grid item sm={10}><Typography align={"center"} variant={"h4"}>My Details</Typography></Grid>
-                            <Grid item sm={1}><IconButton onClick={updateEditActive}><EditIcon/></IconButton></Grid>
-                        </Grid>
-                        <br></br>
-                        <Divider />
-                        <br></br>
-                        <FormControl>
-                            <Stack direction="column" spacing={2}>
-                                <Stack direction="row" spacing={1}>
-                                    <TextField fullWidth autoCapitalize="on" key={k+'1'} disabled={!editActive} defaultValue={user.firstName} id="firstName" label={"First Name"} onChange={updateFirstNameState}/>
-                                    <TextField fullWidth autoCapitalize="on" key={k+'2'} disabled={!editActive} margin={"dense"} defaultValue={user.lastName} id="lastName" label={"Last Name"} onChange={updateLastNameState}/>
-                                </Stack>
-                                <TextField margin={"dense"} disabled={!editActive} key={k+'3'} fullWidth type="email" id="emailInput" error={editActive && !emailRegex.test(email) && email !== ''} defaultValue={user.email} label={"Email"} onChange={updateEmailState}/>
-                                <TextField margin={"dense"} disabled={!editActive} sx={{display: editActive ? '' : 'none'}} type="password" error={editingPassword && password.length < 6} fullWidth id="password" label="New Password (min 6 chars)" onChange={updatePasswordState}/>
-                                <TextField required={editingPassword} margin={"dense"} sx={{display: editingPassword ? '' : 'none'}} disabled={!editActive} type="password" fullWidth id="currentPassword" label="Current Password" onChange={updateCurrentPasswordState}/>
-                                <Grid container justifyContent="center">
-                                    <Grid item style={styles.photoPreview}>
-                                        <img alt={'Your profile photo'} src={profilePhotoPreview}
-                                             onError={({ currentTarget }) => {
-                                                 currentTarget.onerror = null; // prevents looping
-                                                 currentTarget.src="https://upload.wikimedia.org/wikipedia/commons/b/b1/Missing-image-232x150.png";
-                                             }} height={400} />
-                                    </Grid>
-                                </Grid>
-                                <Button fullWidth variant="contained" component="label" sx={{display: editActive ? '' : 'none'}}>
-                                    Upload Profile Photo
-                                    <Input type="file" id="photoUpload" inputProps={{ accept: 'image' }} style={{display: "none"}} onChange={updateProfilePhoto}/>
-                                </Button>
-
-                                <Stack direction="row" spacing={1} justifyContent={"right"}>
-                                    <Button variant="outlined" color="error" onClick={updateEditActive} sx={{display: editActive ? '' : 'none'}}>Cancel</Button>
-                                    <Button variant="outlined" color="success" onClick={editUser} disabled={editingPassword && password.length < 6} sx={{display: editActive ? '' : 'none'}}>Submit</Button>
-                                </Stack>
-                            </Stack>
+                <h1>My Details</h1>
+                <Navbar pageName={"My Details"}/>
+                <div>
+                    <Container maxWidth="sm">
+                        <Paper elevation={4}>
+                            <Grid container>
+                                <Grid item sm={1}></Grid>
+                                <Grid item sm={10}><Typography align={"center"} variant={"h4"}>My
+                                    Details</Typography></Grid>
+                                <Grid item sm={1}><IconButton onClick={updateEditActive}><EditIcon/></IconButton></Grid>
+                            </Grid>
                             <br></br>
-                        </FormControl>
-                    </Paper>
-                </Container>
+                            <Divider/>
+                            <br></br>
+                            <FormControl>
+                                <Stack direction="column" spacing={2}>
+                                    <Stack direction="row" spacing={1}>
+                                        <TextField fullWidth autoCapitalize="on" key={k + '1'} disabled={!editActive}
+                                                   defaultValue={user.firstName} id="firstName" label={"First Name"}
+                                                   onChange={updateFirstNameState}/>
+                                        <TextField fullWidth autoCapitalize="on" key={k + '2'} disabled={!editActive}
+                                                   margin={"dense"} defaultValue={user.lastName} id="lastName"
+                                                   label={"Last Name"} onChange={updateLastNameState}/>
+                                    </Stack>
+                                    <TextField margin={"dense"} disabled={!editActive} key={k + '3'} fullWidth
+                                               type="email" id="emailInput"
+                                               error={editActive && !emailRegex.test(email) && email !== ''}
+                                               defaultValue={user.email} label={"Email"} onChange={updateEmailState}/>
+                                    <TextField margin={"dense"} disabled={!editActive}
+                                               sx={{display: editActive ? '' : 'none'}} type="password"
+                                               error={editingPassword && password.length < 6} fullWidth id="password"
+                                               label="New Password (min 6 chars)" onChange={updatePasswordState}/>
+                                    <TextField required={editingPassword} margin={"dense"}
+                                               sx={{display: editingPassword ? '' : 'none'}} disabled={!editActive}
+                                               type="password" fullWidth id="currentPassword" label="Current Password"
+                                               onChange={updateCurrentPasswordState}/>
+                                    <Grid container justifyContent="center">
+                                        <Grid item style={styles.photoPreview}>
+                                            <img alt={'Your profile photo'} src={profilePhotoPreview}
+                                                 onError={({currentTarget}) => {
+                                                     currentTarget.onerror = null; // prevents looping
+                                                     currentTarget.src = "https://upload.wikimedia.org/wikipedia/commons/b/b1/Missing-image-232x150.png";
+                                                 }} height={400}/>
+                                        </Grid>
+                                    </Grid>
+                                    <Button fullWidth variant="contained" component="label"
+                                            sx={{display: editActive ? '' : 'none'}}>
+                                        Upload Profile Photo
+                                        <Input type="file" id="photoUpload" inputProps={{accept: 'image'}}
+                                               style={{display: "none"}} onChange={updateProfilePhoto}/>
+                                    </Button>
+
+                                    <Stack direction="row" spacing={1} justifyContent={"right"}>
+                                        <Button variant="outlined" color="error" onClick={updateEditActive}
+                                                sx={{display: editActive ? '' : 'none'}}>Cancel</Button>
+                                        <Button variant="outlined" color="success" onClick={editUser}
+                                                disabled={editingPassword && password.length < 6}
+                                                sx={{display: editActive ? '' : 'none'}}>Submit</Button>
+                                    </Stack>
+                                </Stack>
+                                <br></br>
+                            </FormControl>
+                        </Paper>
+                    </Container>
+                </div>
+                <Snackbar
+                    autoHideDuration={6000}
+                    open={snackOpen}
+                    onClose={handleSnackClose}
+                    key={snackMessage}>
+                    <Alert onClose={handleSnackClose} severity={snackSeverity} sx={{
+                        width: '100%'
+                    }}>
+                        {snackMessage}
+                    </Alert>
+                </Snackbar>
             </div>
-            <Snackbar
-                autoHideDuration={6000}
-                open={snackOpen}
-                onClose={handleSnackClose}
-                key={snackMessage}>
-                <Alert onClose={handleSnackClose} severity={snackSeverity} sx={{
-                    width: '100%' }}>
-                    {snackMessage}
-                </Alert>
-            </Snackbar>
-        </div>
-    )
+        )
+    }
 }
 export default MyProfile;

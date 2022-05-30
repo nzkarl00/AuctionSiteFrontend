@@ -45,11 +45,6 @@ const Register = () => {
     const userId = useUserStore(state => state.userId)
     const setUserId = useUserStore(state => state.setUserId)
     const nav = useNavigate();
-    React.useEffect(() => {
-        if (token !== '' || userId === 0) {
-            nav("/users/" + userId)
-        }
-    })
     const styles = {
         photoPreview: {
             height: 400,
@@ -176,56 +171,72 @@ const Register = () => {
                 })
         }
     }
-    return (
-        <div>
-        <h1>Register</h1>
-    <Navbar pageName={"Register"}/>
+    if (token !== '' || userId === 0) {
+        return (<h1>Access Denied</h1>)
+    } else {
+        return (
             <div>
-                <Container maxWidth="sm">
-                    <h1>Register</h1>
-                <FormControl>
-                    <Stack direction="column" spacing={2}>
-                    <Stack direction="row" spacing={1}>
-                        <TextField fullWidth autoCapitalize="on" required id="firstName" label="First Name" error={fnError} onChange={updateFirstNameState}/>
-                        <TextField fullWidth autoCapitalize="on" margin={"dense"} required id="lastName" label="Last Name" error={lnError} onChange={updateLastNameState}/>
-                    </Stack>
-                        <TextField required margin={"dense"} fullWidth type="email" id="email" label="Email Address" error={emError} onChange={updateEmailState}/>
-                    <TextField required margin={"dense"} type="password" fullWidth id="password" label="Password (min 6 chars)" error={password.length < 6 && password.length > 0} onChange={updatePasswordState}/>
-                    <TextField required margin={"dense"} type="password" fullWidth id="confirmPassword" label="Confirm Password" error={confirmPassword.length > 0 && passwordMatchString !== ''} onChange={updateConfirmPasswordState}/>
-                        <h6 style={{color: 'red'}}>{passwordMatchString}</h6>
-                        <Grid container justifyContent="center">
-                            <Grid item style={styles.photoPreview}>
-                                <img alt={'Your profile photo'} src={profilePhotoPreview}
-                                     onError={({ currentTarget }) => {
-                                         currentTarget.onerror = null; // prevents looping
-                                         currentTarget.src="https://upload.wikimedia.org/wikipedia/commons/b/b1/Missing-image-232x150.png";
-                                     }} height={400} />
-                            </Grid>
-                        </Grid>
-                    <Button fullWidth variant="contained" component="label">
-                        Upload Profile Photo
-                        <Input type="file" id="photoUpload" inputProps={{ accept: 'image' }} style={{display: "none"}} onChange={updateProfilePhoto}/>
-                    </Button>
+                <h1>Register</h1>
+                <Navbar pageName={"Register"}/>
+                <div>
+                    <Container maxWidth="sm">
+                        <h1>Register</h1>
+                        <FormControl>
+                            <Stack direction="column" spacing={2}>
+                                <Stack direction="row" spacing={1}>
+                                    <TextField fullWidth autoCapitalize="on" required id="firstName" label="First Name"
+                                               error={fnError} onChange={updateFirstNameState}/>
+                                    <TextField fullWidth autoCapitalize="on" margin={"dense"} required id="lastName"
+                                               label="Last Name" error={lnError} onChange={updateLastNameState}/>
+                                </Stack>
+                                <TextField required margin={"dense"} fullWidth type="email" id="email"
+                                           label="Email Address" error={emError} onChange={updateEmailState}/>
+                                <TextField required margin={"dense"} type="password" fullWidth id="password"
+                                           label="Password (min 6 chars)"
+                                           error={password.length < 6 && password.length > 0}
+                                           onChange={updatePasswordState}/>
+                                <TextField required margin={"dense"} type="password" fullWidth id="confirmPassword"
+                                           label="Confirm Password"
+                                           error={confirmPassword.length > 0 && passwordMatchString !== ''}
+                                           onChange={updateConfirmPasswordState}/>
+                                <h6 style={{color: 'red'}}>{passwordMatchString}</h6>
+                                <Grid container justifyContent="center">
+                                    <Grid item style={styles.photoPreview}>
+                                        <img alt={'Your profile photo'} src={profilePhotoPreview}
+                                             onError={({currentTarget}) => {
+                                                 currentTarget.onerror = null; // prevents looping
+                                                 currentTarget.src = "https://upload.wikimedia.org/wikipedia/commons/b/b1/Missing-image-232x150.png";
+                                             }} height={400}/>
+                                    </Grid>
+                                </Grid>
+                                <Button fullWidth variant="contained" component="label">
+                                    Upload Profile Photo
+                                    <Input type="file" id="photoUpload" inputProps={{accept: 'image'}}
+                                           style={{display: "none"}} onChange={updateProfilePhoto}/>
+                                </Button>
 
-                    <Stack direction="row" spacing={1} justifyContent={"right"}>
-                        <Button variant="outlined" color="error">Cancel</Button>
-                        <Button variant="outlined" color="success" onClick={newUser} disabled={passwordMatchString !== '' || password.length < 6}>Submit</Button>
-                    </Stack>
-                    </Stack>
-                </FormControl>
-                </Container>
+                                <Stack direction="row" spacing={1} justifyContent={"right"}>
+                                    <Button variant="outlined" color="error">Cancel</Button>
+                                    <Button variant="outlined" color="success" onClick={newUser}
+                                            disabled={passwordMatchString !== '' || password.length < 6}>Submit</Button>
+                                </Stack>
+                            </Stack>
+                        </FormControl>
+                    </Container>
+                </div>
+                <Snackbar
+                    autoHideDuration={6000}
+                    open={snackOpen}
+                    onClose={handleSnackClose}
+                    key={snackMessage}>
+                    <Alert onClose={handleSnackClose} severity={snackSeverity} sx={{
+                        width: '100%'
+                    }}>
+                        {snackMessage}
+                    </Alert>
+                </Snackbar>
             </div>
-            <Snackbar
-                autoHideDuration={6000}
-                open={snackOpen}
-                onClose={handleSnackClose}
-                key={snackMessage}>
-                <Alert onClose={handleSnackClose} severity={snackSeverity} sx={{
-                    width: '100%' }}>
-                    {snackMessage}
-                </Alert>
-            </Snackbar>
-    </div>
-    )
+        )
+    }
 }
 export default Register;

@@ -12,8 +12,11 @@ import {
 } from "@mui/material";
 import Navbar from "./Navbar";
 import {spacing} from "react-select/dist/declarations/src/theme";
+import {useUserStore} from "./store";
 
 const Auctions = () => {
+    const token = useUserStore(state => state.userToken)
+    const userId = useUserStore(state => state.userId)
     const [auctions, setAuctions] = React.useState<Array<auction>>([])
     const [errorFlag, setErrorFlag] = React.useState(false)
     const [errorMessage, setErrorMessage] = React.useState("")
@@ -247,6 +250,20 @@ const Auctions = () => {
         </Paper>
         )
     }
+    const loggedIn = () => {
+        if (token === '' || userId === 0) {
+            return (<div></div>)
+        } else {
+            return (
+                <List>
+                    <Grid container spacing={1}>
+                        <Grid item sm={12}><Button fullWidth variant={"contained"} href={"/create-auction"}>Post New Auction</Button></Grid>
+                        <Grid item sm={12}><Button fullWidth variant={"contained"} href={"/my-auctions"}>My Auctions</Button></Grid>
+                    </Grid>
+                </List>
+            )
+        }
+    }
     if(errorFlag) {
         return (
             <div>
@@ -271,13 +288,7 @@ const Auctions = () => {
                         <List>
                         {filter()}
                         </List>
-                        <List>
-                            <Grid container spacing={1}>
-                                <Grid item sm={12}><Button fullWidth variant={"contained"} href={"/create-auction"}>Post New Auction</Button></Grid>
-                                <Grid item sm={12}><Button fullWidth variant={"contained"} href={"/my-auctions"}>My Auctions</Button></Grid>
-                            </Grid>
-
-                        </List>
+                        {loggedIn()}
                     </Container>
                     <Container sx={{ width: "100%"}}>
                     <List>
