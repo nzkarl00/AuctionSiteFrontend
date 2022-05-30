@@ -191,6 +191,30 @@ const Auction = () => {
                     setErrorMessage(error.toString())
                 })
         }
+        if (newEnd === '') {
+            setSnackSeverity("error")
+            setSnackOpen(true)
+            setSnackMessage("Auction end date is required")
+            return
+        }
+        if (newDescription === '') {
+            setSnackSeverity("error")
+            setSnackOpen(true)
+            setSnackMessage("Auction description is required")
+            return
+        }
+        if (newTitle === '') {
+            setSnackSeverity("error")
+            setSnackOpen(true)
+            setSnackMessage("Auction title is required")
+            return
+        }
+        if (new Date(newEnd).getTime() <= Date.now()) {
+            setSnackSeverity("error")
+            setSnackOpen(true)
+            setSnackMessage("End date must be in the future")
+            return
+        }
         axios.patch('http://localhost:4941/api/v1/auctions/' + id,
             {"title": newTitle, "description": newDescription, "categoryId": newCategory, "endDate": newEnd, "reserve": newReserve},
             {headers: {"X-Authorization": token}})
@@ -213,7 +237,7 @@ const Auction = () => {
                         {auctionReserve()}
                     </Grid>
                     <Grid item sm={4} style={{display: "flex", alignItems: "center", justifyContent: "right"}}>
-                        $&nbsp;<Input type="number" disabled={userId === auction.sellerId} onChange={updateBidAmount} inputProps={{ min: auction.highestBid+1, inputMode: 'numeric', pattern: '[0-9]*' }} />
+                        $&nbsp;<Input type="number" key={auction.highestBid} disabled={userId === auction.sellerId} onChange={updateBidAmount} inputProps={{ defaultValue: auction.highestBid+1, min: auction.highestBid+1, inputMode: 'numeric', pattern: '[0-9]*' }} />
                     </Grid>
                     <Grid item sm={2} style={{display: "flex", alignItems: "center", justifyContent: "left"}}>
                         <Button variant="contained" disabled={userId === auction.sellerId} onClick={placeBid}>Place Bid</Button>
@@ -226,7 +250,7 @@ const Auction = () => {
         let text = <Typography variant="h6" style={styles.reserveNotMet}>Closed: Unsold</Typography>
         if (editActive && ((new Date(auction.endDate)).getTime() > Date.now())) {
             return (
-                    <TextField type={"number"} defaultValue={auction.reserve} label={"Reserve"} onChange={updateNewReserve}/>
+                    <TextField type={"number"} InputProps={{ inputProps: { min: 1} }} defaultValue={auction.reserve} label={"Reserve"} onChange={updateNewReserve}/>
             )
         }
         if (bids.length === 0) {
@@ -466,14 +490,25 @@ const Auction = () => {
             )
         }
     }
+    const categoryName = (a: auction) => {
+        const foundCat = categories.find((c: category) => c.categoryId === a.categoryId)
+        if (foundCat) {
+            return foundCat.name
+        } else {
+            return ''
+        }
+    }
     const closingTime = () => {
         if (editActive) {
             return (
                 <Box>
+                Category: {categoryName(auction)}
+                <br></br><br></br>
                 Closing: {getTime(auction.endDate)}
                 <br></br><br></br>
                     <Divider/>
                     <br></br>
+                    End Date:&nbsp;
                 <input type={"date"} onChange={updateNewEnd} min={defaultDate}/>
                     <br></br>
                     <br></br>
@@ -489,6 +524,9 @@ const Auction = () => {
         } else {
             return (
                 <Box>
+                    Category: {categoryName(auction)}
+                    <br></br>
+                    <br></br>
                     Closing: {getTime(auction.endDate)}
                 </Box>
             )

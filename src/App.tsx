@@ -10,6 +10,7 @@ import NotFound from "./NotFound";
 import MyProfile from "./MyProfile";
 import CreateAuction from "./CreateAuction";
 import MyAuctions from "./MyAuctions";
+import AuctionRedirect from "./AuctionRedirect";
 
 function App() {
   return (
@@ -24,6 +25,7 @@ function App() {
               <Route path="/navbar" element={<Navbar pageName={"Default"}/>}/>
               <Route path="/auctions/:id" element={<Auction/>}/>
               <Route path="/users/:id" element={<MyProfile/>}/>
+              <Route path="" element={<AuctionRedirect/>}/>
               <Route path="*" element={<NotFound/>}/>
             </Routes>
           </div>

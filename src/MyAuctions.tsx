@@ -18,6 +18,7 @@ import axios from "axios";
 import {useUserStore} from "./store";
 import {inspect} from "util";
 import EditIcon from "@mui/icons-material/Edit";
+import {useNavigate} from "react-router-dom";
 
 const MyAuctions = () => {
     // @ts-ignore
@@ -28,10 +29,15 @@ const MyAuctions = () => {
     const [errorMessage, setErrorMessage] = React.useState("")
     const [sellingAuctions, setSellingAuctions] = React.useState<Array<auction>>([])
     const userId = useUserStore(state => state.userId)
+    const token = useUserStore(state => state.userToken)
     const millisInDay = 86400000;
+    const nav = useNavigate()
     interface TabPanelProps {children?: React.ReactNode; index: number; value: number;}
     React.useEffect(() => {
         getSelling()
+        if (token === '' || userId === 0) {
+            nav('/access-denied')
+        }
     }, [])
     const getSelling = () => {
         axios.get('http://localhost:4941/api/v1/auctions')

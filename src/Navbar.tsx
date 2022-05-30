@@ -105,7 +105,7 @@ const Navbar = (props: { pageName: any; loggedIn?: boolean}) => {
         } else {
             return (
                 <Grid container justifyContent="flex-end" style={{display: "flex", alignItems: "center"}} spacing={1}>
-                    <Avatar alt={"User Profile Photo"} src={"http://localhost:4941/api/v1/users/" + userId + "/image"}/>
+                    <Avatar alt={"User Profile Photo"} key={userId} src={"http://localhost:4941/api/v1/users/" + userId + "/image"}/>
                 <IconButton id="accountButton" edge={"end"} onClick={openAccountMenu}><ArrowDropDownCircle fontSize={"large"}/></IconButton>
                 <Menu anchorEl={anchorElement} MenuListProps={{"aria-labelledby": "accountButton"}} open={open} onClose={closeAccountMenu}>
                     <MenuItem><Link to={"/users/" + userId}>My Profile</Link></MenuItem>
@@ -204,6 +204,8 @@ const Navbar = (props: { pageName: any; loggedIn?: boolean}) => {
     }
     const deleteToken = () => {
         setToken('')
+        setUserId(0)
+        nav("/auctions")
     }
     const openAccountMenu = (event: React.MouseEvent<HTMLButtonElement>) => {
         setAnchorElement(event.currentTarget);

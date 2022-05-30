@@ -41,9 +41,15 @@ const Register = () => {
     const [snackSeverity, setSnackSeverity] = React.useState<AlertColor>("success")
     const emailRegex = new RegExp('^\\w+([\\.-]?\\w+)*@\\w+([\\.-]?\\w+)*(\\.\\w{2,3})+$')
     const setToken = useUserStore(state => state.setToken)
+    const token = useUserStore(state => state.userToken)
     const userId = useUserStore(state => state.userId)
     const setUserId = useUserStore(state => state.setUserId)
     const nav = useNavigate();
+    React.useEffect(() => {
+        if (token !== '' || userId === 0) {
+            nav("/users/" + userId)
+        }
+    })
     const styles = {
         photoPreview: {
             height: 400,
@@ -162,6 +168,9 @@ const Register = () => {
                             }
                         })
                 }, (error) => {
+                    setSnackSeverity("error")
+                    setSnackOpen(true)
+                    setSnackMessage(error.response.statusText)
                     setErrorFlag(true)
                     setErrorMessage(error.toString())
                 })

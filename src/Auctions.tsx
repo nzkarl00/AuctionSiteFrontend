@@ -8,7 +8,7 @@ import {
     Container, Divider, FormControl, Grid, InputLabel,
     List, ListItem, ListItemAvatar,
     ListItemButton, ListItemText, MenuItem, OutlinedInput, Paper, SelectChangeEvent,
-    Stack, TablePagination, TextField
+    Stack, TablePagination, TextField, Typography
 } from "@mui/material";
 import Navbar from "./Navbar";
 import {spacing} from "react-select/dist/declarations/src/theme";
@@ -44,7 +44,8 @@ const Auctions = () => {
     }
     useEffect(() => {
         updateSearch()
-    })
+    },[selectedCategories, sort, search, status, page, categories])
+
     const updateQ = (event: { target?: any; }) => {
         setSearch(event.target.value)
     }
@@ -134,11 +135,11 @@ const Auctions = () => {
         let endDate = new Date(a.endDate);
         let delta = endDate.getTime() - Date.now();
         if (delta < 0) {
-            return <p style={styles.reserveNotMet}>Closed</p>
+            return <span style={styles.reserveNotMet}>Closed</span>
         } else if (delta < millisInDay) {
-            return <p>Closing today!</p>
+            return <span>Closing today!</span>
         } else {
-            return <p>Closing in {Math.floor(delta/millisInDay)} days</p>
+            return <span>Closing in {Math.floor(delta/millisInDay)} days</span>
         }
     }
     const handleChangePage = (event: React.MouseEvent<HTMLButtonElement> | null, newPage: number) => {
@@ -149,6 +150,15 @@ const Auctions = () => {
         setRowsPerPage(parseInt(event.target.value, 10));
         setPage(0);
     };
+    const categoryName = (a: auction) => {
+        const foundCat = categories.find((c: category) => c.categoryId === a.categoryId)
+        if (foundCat) {
+            return foundCat.name
+        } else {
+            return ''
+        }
+
+    }
     const auctionList = () => {
         return displayedAuctions.map(a =>
                 <Paper elevation={3}>
@@ -165,7 +175,7 @@ const Auctions = () => {
                     <Grid item sm={5.5}>
                             <ListItemText>
                                 <h3>{a.title}</h3>
-                                {timeRemaining(a)}
+                                <Typography>{timeRemaining(a)}  <span style={{color: "gray"}}>&nbsp;|&nbsp;</span>  {categoryName(a)}</Typography>
                             </ListItemText>
                     </Grid>
                     <Grid item sm={2}>
@@ -257,7 +267,7 @@ const Auctions = () => {
                 <br></br>
                 <div style={{display: 'flex'}}>
                     <Navbar pageName={"Auctions"} />
-                    <Container sx={{ width: 1/4.5, position: "fixed"}}>
+                    <Container sx={{ width: 1/4, position: "fixed"}}>
                         <List>
                         {filter()}
                         </List>
@@ -273,8 +283,6 @@ const Auctions = () => {
                     <List>
                         {auctionList()}
                     </List>
-                    </Container>
-                    <Container sx={{ width: 1/6}}>
                     </Container>
                 </div>
             </div>

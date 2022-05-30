@@ -37,7 +37,9 @@ const CreateAuction = () => {
     const nav = useNavigate()
     React.useEffect(() => {
         getCategories()
-
+        if (token === '' || userId === 0) {
+            nav('/access-denied')
+        }
     }, [])
     const handleSnackClose = (event?: React.SyntheticEvent | Event,
                               reason?: string) => {
@@ -77,14 +79,36 @@ const CreateAuction = () => {
             })
     }
     const createAuction = () => {
-        console.log(title, description, category, end, reserve)
+        if (end === '') {
+            setSnackSeverity("error")
+            setSnackOpen(true)
+            setSnackMessage("Auction end date is required")
+            return
+        }
+        if (description === '') {
+            setSnackSeverity("error")
+            setSnackOpen(true)
+            setSnackMessage("Auction description is required")
+            return
+        }
+        if (title === '') {
+            setSnackSeverity("error")
+            setSnackOpen(true)
+            setSnackMessage("Auction title is required")
+            return
+        }
+        if (new Date(end).getTime() <= Date.now()) {
+            setSnackSeverity("error")
+            setSnackOpen(true)
+            setSnackMessage("End date must be in the future")
+            return
+        }
         axios.post('http://localhost:4941/api/v1/auctions', {"title": title, "description": description, "categoryId": category, "endDate": end, "reserve": Math.min(1, reserve)}, {headers: {"X-Authorization": token}})
             .then((response) => {
                 setErrorFlag(false)
                 setErrorMessage("")
                 setSnackSeverity("success")
                 setSnackOpen(true)
-                console.log(response.data)
                 setSnackMessage("Auction created successfully")
                 axios.put('http://localhost:4941/api/v1/auctions/' + response.data.auctionId + '/image', auctionPhoto, {headers: {"X-Authorization": token, "content-type": auctionPhoto?.type ?? 'image/jpeg'}})
                     .then((response) => {
@@ -94,6 +118,9 @@ const CreateAuction = () => {
                     })
                 nav('/auctions/' + response.data.auctionId)
             }, (error) => {
+                setSnackSeverity("error")
+                setSnackOpen(true)
+                setSnackMessage(error.response.statusText)
                 setErrorFlag(true)
                 setErrorMessage(error.toString())
             })
@@ -132,7 +159,7 @@ const CreateAuction = () => {
                                 </TextField>
                                 <TextField required multiline fullWidth id="inputDesc" label={"Description"} onChange={updateDescription}/>
                                 <Stack direction="row" spacing={1} justifyContent={"right"}>
-                                    <TextField type={"number"} label={"Reserve"} onChange={updateReserve}/>
+                                    <TextField type={"number"} InputProps={{ inputProps: { min: 1} }} label={"Reserve"} onChange={updateReserve}/>
                                     <TextField required fullWidth type={"date"} label={"End Date"} onChange={updateEnd} InputLabelProps={{shrink: true}}/>
                                 </Stack>
                                 <Grid container justifyContent="center">

@@ -1,4 +1,4 @@
-import {useParams} from "react-router-dom";
+import {useNavigate, useParams} from "react-router-dom";
 import {useUserStore} from "./store";
 import React from "react";
 import axios from "axios";
@@ -39,8 +39,12 @@ const MyProfile = () => {
     const [snackMessage, setSnackMessage] = React.useState("")
     const [snackSeverity, setSnackSeverity] = React.useState<AlertColor>("success")
     const emailRegex = new RegExp('^\\w+([\\.-]?\\w+)*@\\w+([\\.-]?\\w+)*(\\.\\w{2,3})+$')
+    const nav = useNavigate()
     React.useEffect(() => {
         getUser()
+        if (token === '' || userId === 0) {
+            nav('/access-denied')
+        }
     }, [userId])
     const handleSnackClose = (event?: React.SyntheticEvent | Event,
                               reason?: string) => {
@@ -106,6 +110,7 @@ const MyProfile = () => {
                 {headers: {"X-Authorization": token}})
                 .then((response) => {
                     console.log(response)
+
                     setSnackSeverity("success")
                     setSnackOpen(true)
                     setSnackMessage("Profile updated successfully")
